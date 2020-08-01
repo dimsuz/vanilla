@@ -1,0 +1,15 @@
+.DS_Store
+*.iml
+*.dex
+*.class
+bin/
+gen/
+.gradle/
+.externalNativeBuild
+/build
+/captures
+/.idea/*
+!/.idea/codeStyles/
+!/.idea/codeStyles/
+!/.idea/dictionaries/
+/local.properties
