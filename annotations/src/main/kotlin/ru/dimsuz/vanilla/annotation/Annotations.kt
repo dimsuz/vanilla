@@ -4,7 +4,7 @@ import kotlin.reflect.KClass
 
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.SOURCE)
-annotation class ValidatedAs(val resultType: KClass<*>)
+annotation class ValidatedAs(val verifiedModel: KClass<*>)
 
 @Target(AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.SOURCE)

@@ -1,6 +1,7 @@
 package ru.dimsuz.vanilla.processor
 
 import com.google.common.truth.Truth.assertThat
+import com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import com.tschuchort.compiletesting.SourceFile.Companion.kotlin
@@ -8,6 +9,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 
+@KotlinPoetMetadataPreview
 class VanillaProcessorTest {
   @Rule
   @JvmField var temporaryFolder: TemporaryFolder = TemporaryFolder()
@@ -21,13 +23,14 @@ class VanillaProcessorTest {
         @ValidatedAs(Validated::class)
         class Draft
         
-        data class Validated(val name: String)
+        class Validated(val name: String)
       """.trimIndent()
     ))
 
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains(
-      "error: @ValidatedAs can't be applied to \"Draft\": must have at least one property"
+      "error: failed to find matching properties. " +
+        "Consider adding @ValidatedName annotation to properties of \"Draft\" class"
     )
   }
 
