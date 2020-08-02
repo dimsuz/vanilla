@@ -1,10 +1,15 @@
 plugins {
+  application
   kotlin("jvm")
   kotlin("kapt")
 }
 
 repositories {
   mavenCentral()
+}
+
+application {
+  mainClassName = "ru.dimsuz.vanilla.sample.MainKt"
 }
 
 dependencies {

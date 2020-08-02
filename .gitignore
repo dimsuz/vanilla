@@ -7,6 +7,10 @@ gen/
 .gradle/
 .externalNativeBuild
 /build
+/annotations/build
+/sample/build
+/processor/build
+/library/build
 /captures
 /.idea/*
 !/.idea/codeStyles/
