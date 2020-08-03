@@ -30,11 +30,30 @@ fun <L, R> List<Either<L, R>>.join(): Either<L, List<R>> {
   }
 }
 
-fun <L, R1, R2, V> lift2(e1: Either<L, R1>, e2: Either<L, R2>, f: (R1, R2) -> V): Either<L, V> {
+fun <L, R1, R2, V> lift2(
+  e1: Either<L, R1>,
+  e2: Either<L, R2>,
+  f: (R1, R2) -> V
+): Either<L, V> {
   return when {
     e1 is Right && e2 is Right -> Right(f(e1.value, e2.value))
     e1 is Left -> e1
     e2 is Left -> e2
+    else -> error("impossiburu!")
+  }
+}
+
+fun <L, R1, R2, R3, V> lift3(
+  e1: Either<L, R1>,
+  e2: Either<L, R2>,
+  e3: Either<L, R3>,
+  f: (R1, R2, R3) -> V
+): Either<L, V> {
+  return when {
+    e1 is Right && e2 is Right && e3 is Right -> Right(f(e1.value, e2.value, e3.value))
+    e1 is Left -> e1
+    e2 is Left -> e2
+    e3 is Left -> e3
     else -> error("impossiburu!")
   }
 }

@@ -5,9 +5,11 @@ import ru.dimsuz.vanilla.annotation.ValidatedAs
 import ru.dimsuz.vanilla.annotation.ValidatedName
 import ru.dimsuz.vanilla.processor.either.Either
 import ru.dimsuz.vanilla.processor.either.Left
+import ru.dimsuz.vanilla.processor.either.Right
 import ru.dimsuz.vanilla.processor.either.join
-import ru.dimsuz.vanilla.processor.either.lift2
+import ru.dimsuz.vanilla.processor.either.lift3
 import ru.dimsuz.vanilla.processor.either.toRightOr
+import ru.dimsuz.vanilla.processor.extension.enclosingPackageName
 import javax.annotation.processing.RoundEnvironment
 import javax.lang.model.element.Element
 import javax.lang.model.element.TypeElement
@@ -20,13 +22,29 @@ fun findValidationModelPairs(roundEnv: RoundEnvironment): Either<Error, List<Mod
       .toRightOr("internal error: failed to read source model information")
     val targetKmClass = element.extractTargetModelClass()?.toImmutableKmClass()
       .toRightOr("internal error: failed to read target model information")
-    lift2(sourceKmClass, targetKmClass, ::ModelPair)
+    val sourcePackage = Right(element.enclosingPackageName)
+    lift3(sourceKmClass, targetKmClass, sourcePackage, ::ModelPair)
   }.join()
 }
 
 fun findMatchingProperties(models: ModelPair): Either<Error, PropertyMapping> {
-  return Left("failed to find matching properties. Consider adding @${ValidatedName::class.java.simpleName} " +
-    "annotation to properties of \"${models.source.name}\" class")
+  val sourceProps = models.source.properties.toSet()
+  val targetProps = models.target.properties.toSet()
+  val commonSourceProps = sourceProps.toMutableSet()
+  commonSourceProps.retainAll { sProp -> targetProps.any { it.name == sProp.name } }
+  return if (commonSourceProps.isEmpty()) {
+    Left(
+      "failed to find matching properties. Consider adding @${ValidatedName::class.java.simpleName} " +
+        "annotation to properties of \"${models.source.name}\" class"
+    )
+  } else {
+    Right(
+      PropertyMapping(
+        models = models,
+        mapping = commonSourceProps.associateWith { sProp -> targetProps.first { it.name == sProp.name } }
+      )
+    )
+  }
 }
 
 private fun Element.extractTargetModelClass(): TypeElement? {

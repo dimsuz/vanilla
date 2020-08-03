@@ -26,6 +26,10 @@ class VanillaProcessor : AbstractProcessor() {
       .flatMap { modelPairList ->
         modelPairList.map { findMatchingProperties(it) }.join()
       }
+      .flatMap { propertyMappings ->
+        propertyMappings.map { generateValidator(processingEnv, it) }.join()
+      }
+    println("result: $result")
     if (result is Left) {
       processingEnv.messager.error(result.value)
       return true
