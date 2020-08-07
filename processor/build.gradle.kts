@@ -7,7 +7,7 @@ version = "1.0-SNAPSHOT"
 
 dependencies {
   implementation(kotlin("stdlib-jdk8"))
-  implementation(project(":annotations"))
+  implementation(project(":library"))
   implementation("com.squareup:kotlinpoet:1.6.0")
   implementation("com.squareup:kotlinpoet-metadata:1.6.0")
 

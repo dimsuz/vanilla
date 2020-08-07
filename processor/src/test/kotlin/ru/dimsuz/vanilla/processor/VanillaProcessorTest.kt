@@ -1,19 +1,15 @@
 package ru.dimsuz.vanilla.processor
 
 import com.google.common.truth.Truth.assertThat
-import com.squareup.kotlinpoet.metadata.ImmutableKmValueParameter
 import com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview
 import com.squareup.kotlinpoet.metadata.toImmutableKmClass
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import com.tschuchort.compiletesting.SourceFile.Companion.kotlin
-import kotlinx.metadata.ClassName
 import kotlinx.metadata.KmClassifier
-import kotlinx.metadata.KmValueParameter
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import java.io.File
 
 @KotlinPoetMetadataPreview
 class VanillaProcessorTest {
@@ -79,6 +75,25 @@ class VanillaProcessorTest {
       .toImmutableKmClass()
     assertThat(validatorClass.functions.map { it.name })
       .containsExactly("firstName", "isAdult")
+  }
+
+  @Test
+  fun builderHasErrorTypeParam() {
+    val result = compile(kotlin("source.kt",
+      """
+        import ru.dimsuz.vanilla.annotation.ValidatedAs
+
+        @ValidatedAs(Validated::class)
+        data class Draft(val firstName: Int, val lastName: String)
+        data class Validated(val firstName: Int, val lastName: String)
+      """.trimIndent()
+    ))
+
+    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
+
+    val builderClass = result.classLoader.loadClass("DraftValidator\$Builder").toImmutableKmClass()
+    assertThat(builderClass.typeParameters.map { it.name })
+      .containsExactly("E")
   }
 
   @Test
