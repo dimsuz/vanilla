@@ -7,6 +7,7 @@ import ru.dimsuz.vanilla.processor.either.Either
 import ru.dimsuz.vanilla.processor.either.Left
 import ru.dimsuz.vanilla.processor.either.Right
 import ru.dimsuz.vanilla.processor.either.join
+import ru.dimsuz.vanilla.processor.either.lift2
 import ru.dimsuz.vanilla.processor.either.lift3
 import ru.dimsuz.vanilla.processor.either.toRightOr
 import ru.dimsuz.vanilla.processor.extension.enclosingPackageName
@@ -22,8 +23,7 @@ fun findValidationModelPairs(roundEnv: RoundEnvironment): Either<Error, List<Mod
       .toRightOr("internal error: failed to read source model information")
     val targetKmClass = element.extractTargetModelClass()?.toImmutableKmClass()
       .toRightOr("internal error: failed to read target model information")
-    val sourcePackage = Right(element.enclosingPackageName)
-    lift3(sourceKmClass, targetKmClass, sourcePackage, ::ModelPair)
+    lift2(sourceKmClass, targetKmClass, ::ModelPair)
   }.join()
 }
 

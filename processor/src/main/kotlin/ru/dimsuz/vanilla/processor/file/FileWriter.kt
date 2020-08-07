@@ -13,12 +13,6 @@ internal fun writeFile(
 ): Either<String, Unit> {
   val kaptKotlinGeneratedDir = processingEnv.options["kapt.kotlin.generated"]
     ?: return Left("Can't find the target directory for generated Kotlin files.")
-  File(
-    "$kaptKotlinGeneratedDir/${fileSpec.packageName.replace(".", "/")}",
-    fileSpec.name
-  ).apply {
-    parentFile.mkdirs()
-    writeText(fileSpec.toBuilder().indent(" ").build().toString())
-  }
+  fileSpec.writeTo(File(kaptKotlinGeneratedDir))
   return Right(Unit)
 }

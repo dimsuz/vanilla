@@ -62,6 +62,8 @@ class VanillaProcessorTest {
   fun matchesPropertiesDifferingInType() {
     val result = compile(kotlin("source.kt",
       """
+        package ru.dimsuz.vanilla.test
+
         import ru.dimsuz.vanilla.annotation.ValidatedAs
 
         @ValidatedAs(Validated::class)
@@ -72,7 +74,9 @@ class VanillaProcessorTest {
 
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
 
-    val validatorClass = result.classLoader.loadClass("DraftValidator\$Builder").toImmutableKmClass()
+    val validatorClass = result.classLoader
+      .loadClass("ru.dimsuz.vanilla.test.DraftValidator\$Builder")
+      .toImmutableKmClass()
     assertThat(validatorClass.functions.map { it.name })
       .containsExactly("firstName", "isAdult")
   }
@@ -95,7 +99,7 @@ class VanillaProcessorTest {
 
     assertThat(validatorClass.functions.single().valueParameters).hasSize(1)
     val parameter = validatorClass.functions.first().valueParameters.first()
-    assertThat(parameter.name).isEqualTo("firstName")
+    assertThat(parameter.name).isEqualTo("validator")
     assertThat(parameter.type?.classifier)
       .isEqualTo(KmClassifier.Class("Validator"))
     assertThat(parameter.type?.arguments?.map { it.type?.classifier })
@@ -108,6 +112,8 @@ class VanillaProcessorTest {
   // TODO works ok if target has more properties than source
   // TODO gives an error if source and target have properties but no match can be found
   // TODO generates property validator signature which has target field type if it differs from source
+  // TODO generates properly if source/target classes are inside another class
+  // TODO generates properly if source/target classes are inside another interface
 
   private fun prepareCompilation(vararg sourceFiles: SourceFile): KotlinCompilation {
     return KotlinCompilation()

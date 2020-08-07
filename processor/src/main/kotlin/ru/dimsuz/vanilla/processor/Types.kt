@@ -12,6 +12,5 @@ data class PropertyMapping(
 
 data class ModelPair(
   val source: ImmutableKmClass,
-  val target: ImmutableKmClass,
-  val sourcePackage: String
+  val target: ImmutableKmClass
 )
