@@ -1,6 +1,7 @@
 package ru.dimsuz.vanilla.processor
 
 import com.google.common.truth.Truth.assertThat
+import com.squareup.kotlinpoet.metadata.ImmutableKmType
 import com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview
 import com.squareup.kotlinpoet.metadata.isNullable
 import com.squareup.kotlinpoet.metadata.toImmutableKmClass
@@ -151,14 +152,15 @@ class VanillaProcessorTest {
     assertThat(ruleFunction.valueParameters).hasSize(1)
     val parameter = ruleFunction.valueParameters.first()
     assertThat(parameter.name).isEqualTo("validator")
-    assertThat(parameter.type?.classifier)
-      .isEqualTo(KmClassifier.Class("ru/dimsuz/vanilla/Validator"))
-    assertThat(parameter.type?.arguments?.map { it.type?.classifier })
-      .containsExactly(
-        KmClassifier.Class("kotlin/Int"),
-        KmClassifier.Class("kotlin/Float"),
-        KmClassifier.TypeParameter(id = 0)
-      )
+    assertIsValidatorType(parameter.type)
+    parameter.type.withFirstTypeArg { type ->
+      assertThat(type?.classifier)
+        .isEqualTo(KmClassifier.Class("kotlin/Int"))
+    }
+    parameter.type.withResultOkArg { type ->
+      assertThat(type?.classifier).isEqualTo(KmClassifier.Class("kotlin/Float"))
+    }
+
     assertThat(ruleFunction.returnType.classifier)
       .isEqualTo(KmClassifier.Class("DraftValidator.Builder"))
   }
@@ -185,30 +187,30 @@ class VanillaProcessorTest {
     val ruleFunction = builderClass.functions.first { it.name == "firstName" }
     assertThat(ruleFunction.valueParameters).hasSize(1)
     val parameter = ruleFunction.valueParameters.first()
-    val firstTypeArgument = parameter.type?.arguments?.getOrNull(0)
-    val secondTypeArgument = parameter.type?.arguments?.getOrNull(1)
 
-    assertThat(firstTypeArgument?.type?.classifier)
-      .isEqualTo(KmClassifier.Class("kotlin/collections/Map"))
-    assertThat(firstTypeArgument?.type?.isNullable)
-      .isTrue()
-    assertThat(firstTypeArgument?.type?.arguments?.map { it.type?.classifier })
-      .containsExactly(KmClassifier.Class("Name"), KmClassifier.Class("NameComplex"))
-    assertThat(firstTypeArgument?.type?.arguments?.get(0)?.type?.isNullable)
-      .isFalse()
-    assertThat(firstTypeArgument?.type?.arguments?.get(1)?.type?.isNullable)
-      .isTrue()
+    assertIsValidatorType(parameter.type)
 
-    assertThat(secondTypeArgument?.type?.classifier)
-      .isEqualTo(KmClassifier.Class("kotlin/collections/MutableMap"))
-    assertThat(secondTypeArgument?.type?.isNullable)
-      .isFalse()
-    assertThat(secondTypeArgument?.type?.arguments?.map { it.type?.classifier })
-      .containsExactly(KmClassifier.Class("kotlin/Int"), KmClassifier.Class("NameComplex"))
-    assertThat(secondTypeArgument?.type?.arguments?.get(0)?.type?.isNullable)
-      .isFalse()
-    assertThat(secondTypeArgument?.type?.arguments?.get(1)?.type?.isNullable)
-      .isFalse()
+    parameter.type.withFirstTypeArg { type ->
+      assertThat(type?.classifier).isEqualTo(KmClassifier.Class("kotlin/collections/Map"))
+      assertThat(type?.isNullable).isTrue()
+      assertThat(type?.arguments?.map { it.type?.classifier })
+        .containsExactly(KmClassifier.Class("Name"), KmClassifier.Class("NameComplex"))
+      assertThat(type?.arguments?.get(0)?.type?.isNullable).isFalse()
+      assertThat(type?.arguments?.get(1)?.type?.isNullable).isTrue()
+    }
+
+    parameter.type.withResultOkArg { type ->
+      assertThat(type?.classifier)
+        .isEqualTo(KmClassifier.Class("kotlin/collections/MutableMap"))
+      assertThat(type?.isNullable)
+        .isFalse()
+      assertThat(type?.arguments?.map { it.type?.classifier })
+        .containsExactly(KmClassifier.Class("kotlin/Int"), KmClassifier.Class("NameComplex"))
+      assertThat(type?.arguments?.get(0)?.type?.isNullable)
+        .isFalse()
+      assertThat(type?.arguments?.get(1)?.type?.isNullable)
+        .isFalse()
+    }
   }
 
   @Test
@@ -229,14 +231,27 @@ class VanillaProcessorTest {
     val buildFunction = builderClass.functions.find { it.name == "build" }
     assertThat(buildFunction).isNotNull()
     assertThat(buildFunction!!.valueParameters).isEmpty()
-    assertThat(buildFunction.returnType.classifier)
-      .isEqualTo(KmClassifier.Class("ru/dimsuz/vanilla/Validator"))
-    assertThat(buildFunction.returnType.arguments.map { it.type?.classifier })
-      .containsExactly(
-        KmClassifier.Class("Draft"), KmClassifier.Class("Validated"), KmClassifier.TypeParameter(id = 0)
-      )
-    assertThat(buildFunction.returnType.arguments.map { it.type?.isNullable })
-      .containsExactly(false, false, false)
+    assertIsValidatorType(buildFunction.returnType)
+    buildFunction.returnType.withFirstTypeArg { type ->
+      assertThat(type?.classifier).isEqualTo(KmClassifier.Class("Draft"))
+    }
+    buildFunction.returnType.withResultOkArg { type ->
+      assertThat(type?.classifier).isEqualTo(KmClassifier.Class("Validated"))
+    }
+  }
+
+  private fun assertIsValidatorType(type: ImmutableKmType?) {
+    assertThat(type?.classifier).isEqualTo(KmClassifier.Class("kotlin/Function1"))
+  }
+
+  private fun ImmutableKmType?.withResultOkArg(body: (ImmutableKmType?) -> Unit) {
+    val type = this?.arguments?.getOrNull(1)?.type
+    assertThat(type?.classifier).isEqualTo(KmClassifier.Class("ru/dimsuz/vanilla/Result"))
+    body(type?.arguments?.firstOrNull()?.type)
+  }
+
+  private fun ImmutableKmType?.withFirstTypeArg(body: (ImmutableKmType?) -> Unit) {
+    body(this?.arguments?.getOrNull(0)?.type)
   }
 
   // TODO works ok if target has more properties than source

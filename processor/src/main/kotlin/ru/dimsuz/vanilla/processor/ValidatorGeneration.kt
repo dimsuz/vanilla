@@ -5,6 +5,7 @@ import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.ParameterizedTypeName
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import com.squareup.kotlinpoet.TypeAliasSpec
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.asClassName
@@ -43,7 +44,7 @@ private fun createBuilderRuleFunctions(mapping: PropertyMapping): Iterable<FunSp
   return mapping.mapping.map { (sourceProp, targetProp) ->
     val sourcePropType = sourceTypeSpec.propertySpecs.first { it.name == sourceProp.name }.type
     val targetPropType = targetTypeSpec.propertySpecs.first { it.name == targetProp.name }.type
-    val propValidatorType = Validator::class.asClassName()
+    val propValidatorType = ClassName("ru.dimsuz.vanilla", "Validator")
       .parameterizedBy(
         sourcePropType,
         targetPropType
@@ -58,9 +59,7 @@ private fun createBuilderRuleFunctions(mapping: PropertyMapping): Iterable<FunSp
 }
 
 private fun createBuildFunction(mapping: PropertyMapping): FunSpec {
-  val sourceTypeSpec = mapping.models.sourceKmClass.toTypeSpec(null)
-  val targetTypeSpec = mapping.models.targetKmClass.toTypeSpec(null)
-  val resultValidatorType = Validator::class.asClassName()
+  val resultValidatorType = ClassName("ru.dimsuz.vanilla", "Validator")
     .parameterizedBy(
       ClassName(mapping.models.sourceKmClass.packageName, mapping.models.sourceKmClass.simpleName),
       ClassName(mapping.models.targetKmClass.packageName, mapping.models.targetKmClass.simpleName),
