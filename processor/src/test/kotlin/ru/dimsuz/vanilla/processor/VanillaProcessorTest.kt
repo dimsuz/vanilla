@@ -37,6 +37,40 @@ class VanillaProcessorTest {
   }
 
   @Test
+  fun parameterizedSourceNotSupported() {
+    val result = compile(kotlin("source.kt",
+      """
+        import ru.dimsuz.vanilla.annotation.ValidatedAs
+
+        @ValidatedAs(Validated::class)
+        data class Draft<T>(val firstName: T?)
+        data class Validated(val firstName: String?)
+      """.trimIndent()
+    ))
+
+    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
+    assertThat(result.messages)
+      .contains("Source class \"Draft\" has a generic parameter. This is not supported yet.")
+  }
+
+  @Test
+  fun parameterizedTargetNotSupported() {
+    val result = compile(kotlin("source.kt",
+      """
+        import ru.dimsuz.vanilla.annotation.ValidatedAs
+
+        @ValidatedAs(Validated::class)
+        data class Draft(val firstName: Int)
+        data class Validated<T>(val firstName: T?)
+      """.trimIndent()
+    ))
+
+    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
+    assertThat(result.messages)
+      .contains("Target class \"Validated\" has a generic parameter. This is not supported yet.")
+  }
+
+  @Test
   fun matchesDirectProperties() {
     val result = compile(kotlin("source.kt",
       """
@@ -52,7 +86,7 @@ class VanillaProcessorTest {
 
     val validatorClass = result.classLoader.loadClass("DraftValidator\$Builder").toImmutableKmClass()
     assertThat(validatorClass.functions.map { it.name })
-      .containsExactly("firstName", "lastName")
+      .containsAtLeast("firstName", "lastName")
   }
 
   @Test
@@ -71,11 +105,11 @@ class VanillaProcessorTest {
 
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
 
-    val validatorClass = result.classLoader
+    val builderClass = result.classLoader
       .loadClass("ru.dimsuz.vanilla.test.DraftValidator\$Builder")
       .toImmutableKmClass()
-    assertThat(validatorClass.functions.map { it.name })
-      .containsExactly("firstName", "isAdult")
+    assertThat(builderClass.functions.map { it.name })
+      .containsAtLeast("firstName", "isAdult")
   }
 
   @Test
@@ -113,8 +147,9 @@ class VanillaProcessorTest {
 
     val validatorClass = result.classLoader.loadClass("DraftValidator\$Builder").toImmutableKmClass()
 
-    assertThat(validatorClass.functions.single().valueParameters).hasSize(1)
-    val parameter = validatorClass.functions.first().valueParameters.first()
+    val ruleFunction = validatorClass.functions.first { it.name == "firstName" }
+    assertThat(ruleFunction.valueParameters).hasSize(1)
+    val parameter = ruleFunction.valueParameters.first()
     assertThat(parameter.name).isEqualTo("validator")
     assertThat(parameter.type?.classifier)
       .isEqualTo(KmClassifier.Class("ru/dimsuz/vanilla/Validator"))
@@ -124,6 +159,8 @@ class VanillaProcessorTest {
         KmClassifier.Class("kotlin/Float"),
         KmClassifier.TypeParameter(id = 0)
       )
+    assertThat(ruleFunction.returnType.classifier)
+      .isEqualTo(KmClassifier.Class("DraftValidator.Builder"))
   }
 
   @Test
@@ -143,10 +180,11 @@ class VanillaProcessorTest {
 
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
 
-    val validatorClass = result.classLoader.loadClass("DraftValidator\$Builder").toImmutableKmClass()
+    val builderClass = result.classLoader.loadClass("DraftValidator\$Builder").toImmutableKmClass()
 
-    assertThat(validatorClass.functions.single().valueParameters).hasSize(1)
-    val parameter = validatorClass.functions.first().valueParameters.first()
+    val ruleFunction = builderClass.functions.first { it.name == "firstName" }
+    assertThat(ruleFunction.valueParameters).hasSize(1)
+    val parameter = ruleFunction.valueParameters.first()
     val firstTypeArgument = parameter.type?.arguments?.getOrNull(0)
     val secondTypeArgument = parameter.type?.arguments?.getOrNull(1)
 
@@ -171,6 +209,34 @@ class VanillaProcessorTest {
       .isFalse()
     assertThat(secondTypeArgument?.type?.arguments?.get(1)?.type?.isNullable)
       .isFalse()
+  }
+
+  @Test
+  fun builderHasBuildMethod() {
+    val result = compile(kotlin("source.kt",
+      """
+        import ru.dimsuz.vanilla.annotation.ValidatedAs
+
+        @ValidatedAs(Validated::class)
+        data class Draft(val firstName: Int?)
+        data class Validated(val firstName: String?)
+      """.trimIndent()
+    ))
+
+    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
+
+    val builderClass = result.classLoader.loadClass("DraftValidator\$Builder").toImmutableKmClass()
+    val buildFunction = builderClass.functions.find { it.name == "build" }
+    assertThat(buildFunction).isNotNull()
+    assertThat(buildFunction!!.valueParameters).isEmpty()
+    assertThat(buildFunction.returnType.classifier)
+      .isEqualTo(KmClassifier.Class("ru/dimsuz/vanilla/Validator"))
+    assertThat(buildFunction.returnType.arguments.map { it.type?.classifier })
+      .containsExactly(
+        KmClassifier.Class("Draft"), KmClassifier.Class("Validated"), KmClassifier.TypeParameter(id = 0)
+      )
+    assertThat(buildFunction.returnType.arguments.map { it.type?.isNullable })
+      .containsExactly(false, false, false)
   }
 
   // TODO works ok if target has more properties than source

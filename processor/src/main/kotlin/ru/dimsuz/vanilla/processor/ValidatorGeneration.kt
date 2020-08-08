@@ -3,6 +3,7 @@ package ru.dimsuz.vanilla.processor
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
+import com.squareup.kotlinpoet.ParameterizedTypeName
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.TypeVariableName
@@ -32,6 +33,7 @@ private fun createBuilderTypeSpec(mapping: PropertyMapping): TypeSpec {
   return TypeSpec.classBuilder("Builder")
     .addTypeVariable(TypeVariableName("E"))
     .addFunctions(createBuilderRuleFunctions(mapping))
+    .addFunction(createBuildFunction(mapping))
     .build()
 }
 
@@ -49,6 +51,23 @@ private fun createBuilderRuleFunctions(mapping: PropertyMapping): Iterable<FunSp
       .plusParameter(TypeVariableName("E"))
     FunSpec.builder(sourceProp.name)
       .addParameter("validator", propValidatorType)
+      .returns(ClassName("", "Builder").parameterizedBy(TypeVariableName("E")))
+      .addCode("TODO()")
       .build()
   }
+}
+
+private fun createBuildFunction(mapping: PropertyMapping): FunSpec {
+  val sourceTypeSpec = mapping.models.sourceKmClass.toTypeSpec(null)
+  val targetTypeSpec = mapping.models.targetKmClass.toTypeSpec(null)
+  val resultValidatorType = Validator::class.asClassName()
+    .parameterizedBy(
+      ClassName(mapping.models.sourceKmClass.packageName, mapping.models.sourceKmClass.simpleName),
+      ClassName(mapping.models.targetKmClass.packageName, mapping.models.targetKmClass.simpleName),
+      TypeVariableName("E")
+    )
+  return FunSpec.builder("build")
+    .returns(resultValidatorType)
+    .addCode("TODO()")
+    .build()
 }
