@@ -2,6 +2,7 @@ package ru.dimsuz.vanilla.processor
 
 import com.google.common.truth.Truth.assertThat
 import com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview
+import com.squareup.kotlinpoet.metadata.isNullable
 import com.squareup.kotlinpoet.metadata.toImmutableKmClass
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
@@ -116,14 +117,62 @@ class VanillaProcessorTest {
     val parameter = validatorClass.functions.first().valueParameters.first()
     assertThat(parameter.name).isEqualTo("validator")
     assertThat(parameter.type?.classifier)
-      .isEqualTo(KmClassifier.Class("Validator"))
+      .isEqualTo(KmClassifier.Class("ru/dimsuz/vanilla/Validator"))
     assertThat(parameter.type?.arguments?.map { it.type?.classifier })
-      .containsExactly(KmClassifier.Class("Int"), KmClassifier.Class("Float"), KmClassifier.TypeParameter(id = 0))
+      .containsExactly(
+        KmClassifier.Class("kotlin/Int"),
+        KmClassifier.Class("kotlin/Float"),
+        KmClassifier.TypeParameter(id = 0)
+      )
   }
 
-  // TODO builder has Input, Output, Error type parameters
-  // TODO nullable validator signature in source, target
-  // TODO custom data classes in validator signature in source, target
+  @Test
+  fun generatesCorrectGenericPropertyRuleSignature() {
+    val result = compile(kotlin("source.kt",
+      """
+        import ru.dimsuz.vanilla.annotation.ValidatedAs
+
+        object Name
+        object NameComplex
+
+        @ValidatedAs(Validated::class)
+        data class Draft(val firstName: Map<Name, NameComplex?>?)
+        data class Validated(val firstName: MutableMap<Int, NameComplex>)
+      """.trimIndent()
+    ))
+
+    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
+
+    val validatorClass = result.classLoader.loadClass("DraftValidator\$Builder").toImmutableKmClass()
+
+    assertThat(validatorClass.functions.single().valueParameters).hasSize(1)
+    val parameter = validatorClass.functions.first().valueParameters.first()
+    val firstTypeArgument = parameter.type?.arguments?.getOrNull(0)
+    val secondTypeArgument = parameter.type?.arguments?.getOrNull(1)
+
+    assertThat(firstTypeArgument?.type?.classifier)
+      .isEqualTo(KmClassifier.Class("kotlin/collections/Map"))
+    assertThat(firstTypeArgument?.type?.isNullable)
+      .isTrue()
+    assertThat(firstTypeArgument?.type?.arguments?.map { it.type?.classifier })
+      .containsExactly(KmClassifier.Class("Name"), KmClassifier.Class("NameComplex"))
+    assertThat(firstTypeArgument?.type?.arguments?.get(0)?.type?.isNullable)
+      .isFalse()
+    assertThat(firstTypeArgument?.type?.arguments?.get(1)?.type?.isNullable)
+      .isTrue()
+
+    assertThat(secondTypeArgument?.type?.classifier)
+      .isEqualTo(KmClassifier.Class("kotlin/collections/MutableMap"))
+    assertThat(secondTypeArgument?.type?.isNullable)
+      .isFalse()
+    assertThat(secondTypeArgument?.type?.arguments?.map { it.type?.classifier })
+      .containsExactly(KmClassifier.Class("kotlin/Int"), KmClassifier.Class("NameComplex"))
+    assertThat(secondTypeArgument?.type?.arguments?.get(0)?.type?.isNullable)
+      .isFalse()
+    assertThat(secondTypeArgument?.type?.arguments?.get(1)?.type?.isNullable)
+      .isFalse()
+  }
+
   // TODO works ok if target has more properties than source
   // TODO gives an error if source and target have properties but no match can be found
   // TODO generates property validator signature which has target field type if it differs from source
