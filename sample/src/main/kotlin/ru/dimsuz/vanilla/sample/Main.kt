@@ -14,4 +14,15 @@ fun main() {
     // TODO use compose isNotNull + toInt
     .age { input -> input?.toIntOrNull().toOkOrElse { "error must be not null string convertible to int" } }
     .build()
+  validator(
+    PersonDraft(
+    firstName = null,
+    lastName = null,
+      age = "23year",
+      addr = null,
+      phoneNumbers = null,
+      friends = null,
+      extraUnused1 = 1,
+      extraUnused2 = ""
+  ))
 }
