@@ -2,6 +2,7 @@ package ru.dimsuz.vanilla.processor
 
 import com.squareup.kotlinpoet.metadata.ImmutableKmClass
 import com.squareup.kotlinpoet.metadata.ImmutableKmProperty
+import javax.lang.model.element.TypeElement
 
 typealias Error = String
 
@@ -12,5 +13,6 @@ data class PropertyMapping(
 
 data class ModelPair(
   val sourceKmClass: ImmutableKmClass,
-  val targetKmClass: ImmutableKmClass
+  val targetKmClass: ImmutableKmClass,
+  val sourceElement: TypeElement
 )

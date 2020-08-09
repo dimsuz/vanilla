@@ -15,7 +15,7 @@ class SampleImplementationTest {
     try {
       PersonDraftValidator.Builder<String>()
         .build()
-        .invoke(draft)
+        .validate(draft)
     } catch (e: Exception) {
       exception = e
     }
@@ -80,7 +80,7 @@ class SampleImplementationTest {
       .phoneNumbers(DummyValidator.success(expectedPhoneNumbers))
       .friends(DummyValidator.success(emptyMap()))
       .build()
-      .invoke(draft)
+      .validate(draft)
 
     assertThat(result)
       .isEqualTo(Result.Ok(expectedPerson))
@@ -107,7 +107,7 @@ class SampleImplementationTest {
       .phoneNumbers(DummyValidator.fail("phoneNumbers error"))
       .friends(DummyValidator.fail("friends error 1"))
       .build()
-      .invoke(draft)
+      .validate(draft)
 
     assertThat(result)
       .isEqualTo(

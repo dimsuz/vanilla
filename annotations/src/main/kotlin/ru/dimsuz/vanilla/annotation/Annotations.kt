@@ -6,10 +6,10 @@ import kotlin.reflect.KClass
 @Retention(AnnotationRetention.SOURCE)
 annotation class ValidatedAs(val verifiedModel: KClass<*>)
 
-@Target(AnnotationTarget.PROPERTY)
+@Target(AnnotationTarget.FIELD)
 @Retention(AnnotationRetention.SOURCE)
 annotation class ValidatedName(val name: String)
 
-@Target(AnnotationTarget.PROPERTY)
+@Target(AnnotationTarget.FIELD)
 @Retention(AnnotationRetention.SOURCE)
 annotation class DependsOn(val fieldNames: Array<String>)
