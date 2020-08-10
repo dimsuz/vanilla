@@ -2,9 +2,9 @@ package ru.dimsuz.vanilla.sample
 
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
+import ru.dimsuz.vanilla.Result
 import ru.dimsuz.vanilla.sample.dummy.DummyValidator
 import java.lang.Exception
-import ru.dimsuz.vanilla.Result
 
 class SampleImplementationTest {
   @Test

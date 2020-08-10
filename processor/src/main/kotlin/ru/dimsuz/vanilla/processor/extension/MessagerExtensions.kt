@@ -14,4 +14,3 @@ internal fun Messager.warning(message: String) {
 internal fun Messager.error(message: String) {
   printMessage(Diagnostic.Kind.ERROR, message)
 }
-

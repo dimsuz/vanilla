@@ -16,13 +16,14 @@ fun main() {
     .build()
   validator(
     PersonDraft(
-    firstName = null,
-    lastName = null,
+      firstName = null,
+      lastName = null,
       age = "23year",
       addr = null,
       phoneNumbers = null,
       friends = null,
       extraUnused1 = 1,
       extraUnused2 = ""
-  ))
+    )
+  )
 }

@@ -40,18 +40,22 @@ private fun createValidateFunctions(mapping: PropertyMapping): List<FunSpec> {
   val invokeFunction = FunSpec.builder("invoke")
     .addModifiers(KModifier.OVERRIDE)
     .addParameter("input", mapping.models.sourceKmClass.toClassName())
-    .returns(ClassName("ru.dimsuz.vanilla", "Result").parameterizedBy(
-      mapping.models.targetKmClass.toClassName(),
-      TypeVariableName("E")
-    ))
+    .returns(
+      ClassName("ru.dimsuz.vanilla", "Result").parameterizedBy(
+        mapping.models.targetKmClass.toClassName(),
+        TypeVariableName("E")
+      )
+    )
     .addCode("TODO()")
     .build()
   val validateFunction = FunSpec.builder("validate")
     .addParameter("input", mapping.models.sourceKmClass.toClassName())
-    .returns(ClassName("ru.dimsuz.vanilla", "Result").parameterizedBy(
-      mapping.models.targetKmClass.toClassName(),
-      TypeVariableName("E")
-    ))
+    .returns(
+      ClassName("ru.dimsuz.vanilla", "Result").parameterizedBy(
+        mapping.models.targetKmClass.toClassName(),
+        TypeVariableName("E")
+      )
+    )
     .addStatement("return %N(input)", invokeFunction)
     .build()
   return listOf(invokeFunction, validateFunction)

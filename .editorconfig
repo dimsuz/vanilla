@@ -1,0 +1,4 @@
+# This config file is used by ktlint (and potentially other tools)
+[*.{kt,kts}]
+indent_size=2
+max_line_length=120

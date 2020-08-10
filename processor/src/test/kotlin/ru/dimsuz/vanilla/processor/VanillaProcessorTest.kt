@@ -20,15 +20,18 @@ class VanillaProcessorTest {
 
   @Test
   fun classMustHaveProperties() {
-    val result = compile(kotlin("source.kt",
-      """
+    val result = compile(
+      kotlin(
+        "source.kt",
+        """
         import ru.dimsuz.vanilla.annotation.ValidatedAs
         
         @ValidatedAs(Validated::class)
         class Draft
         class Validated(val name: String)
-      """.trimIndent()
-    ))
+        """.trimIndent()
+      )
+    )
 
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains(
@@ -39,15 +42,18 @@ class VanillaProcessorTest {
 
   @Test
   fun parameterizedSourceNotSupported() {
-    val result = compile(kotlin("source.kt",
-      """
+    val result = compile(
+      kotlin(
+        "source.kt",
+        """
         import ru.dimsuz.vanilla.annotation.ValidatedAs
 
         @ValidatedAs(Validated::class)
         data class Draft<T>(val firstName: T?)
         data class Validated(val firstName: String?)
-      """.trimIndent()
-    ))
+        """.trimIndent()
+      )
+    )
 
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages)
@@ -56,15 +62,18 @@ class VanillaProcessorTest {
 
   @Test
   fun parameterizedTargetNotSupported() {
-    val result = compile(kotlin("source.kt",
-      """
+    val result = compile(
+      kotlin(
+        "source.kt",
+        """
         import ru.dimsuz.vanilla.annotation.ValidatedAs
 
         @ValidatedAs(Validated::class)
         data class Draft(val firstName: Int)
         data class Validated<T>(val firstName: T?)
-      """.trimIndent()
-    ))
+        """.trimIndent()
+      )
+    )
 
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages)
@@ -73,15 +82,18 @@ class VanillaProcessorTest {
 
   @Test
   fun matchesDirectProperties() {
-    val result = compile(kotlin("source.kt",
-      """
+    val result = compile(
+      kotlin(
+        "source.kt",
+        """
         import ru.dimsuz.vanilla.annotation.ValidatedAs
 
         @ValidatedAs(Validated::class)
         data class Draft(val firstName: Int, val lastName: String)
         data class Validated(val firstName: Int, val lastName: String)
-      """.trimIndent()
-    ))
+        """.trimIndent()
+      )
+    )
 
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
 
@@ -92,8 +104,10 @@ class VanillaProcessorTest {
 
   @Test
   fun matchesPropertiesDifferingInType() {
-    val result = compile(kotlin("source.kt",
-      """
+    val result = compile(
+      kotlin(
+        "source.kt",
+        """
         package ru.dimsuz.vanilla.test
 
         import ru.dimsuz.vanilla.annotation.ValidatedAs
@@ -101,8 +115,9 @@ class VanillaProcessorTest {
         @ValidatedAs(Validated::class)
         data class Draft(val firstName: Int, val isAdult: String)
         data class Validated(val firstName: Float, val isAdult: Boolean)
-      """.trimIndent()
-    ))
+        """.trimIndent()
+      )
+    )
 
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
 
@@ -115,15 +130,18 @@ class VanillaProcessorTest {
 
   @Test
   fun builderHasErrorTypeParam() {
-    val result = compile(kotlin("source.kt",
-      """
+    val result = compile(
+      kotlin(
+        "source.kt",
+        """
         import ru.dimsuz.vanilla.annotation.ValidatedAs
 
         @ValidatedAs(Validated::class)
         data class Draft(val firstName: Int, val lastName: String)
         data class Validated(val firstName: Int, val lastName: String)
-      """.trimIndent()
-    ))
+        """.trimIndent()
+      )
+    )
 
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
 
@@ -134,15 +152,18 @@ class VanillaProcessorTest {
 
   @Test
   fun generatesCorrectPropertyRuleSignature() {
-    val result = compile(kotlin("source.kt",
-      """
+    val result = compile(
+      kotlin(
+        "source.kt",
+        """
         import ru.dimsuz.vanilla.annotation.ValidatedAs
 
         @ValidatedAs(Validated::class)
         data class Draft(val firstName: Int)
         data class Validated(val firstName: Float)
-      """.trimIndent()
-    ))
+        """.trimIndent()
+      )
+    )
 
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
 
@@ -167,8 +188,10 @@ class VanillaProcessorTest {
 
   @Test
   fun generatesCorrectGenericPropertyRuleSignature() {
-    val result = compile(kotlin("source.kt",
-      """
+    val result = compile(
+      kotlin(
+        "source.kt",
+        """
         import ru.dimsuz.vanilla.annotation.ValidatedAs
 
         object Name
@@ -177,8 +200,9 @@ class VanillaProcessorTest {
         @ValidatedAs(Validated::class)
         data class Draft(val firstName: Map<Name, NameComplex?>?)
         data class Validated(val firstName: MutableMap<Int, NameComplex>)
-      """.trimIndent()
-    ))
+        """.trimIndent()
+      )
+    )
 
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
 
@@ -215,15 +239,18 @@ class VanillaProcessorTest {
 
   @Test
   fun builderHasBuildMethod() {
-    val result = compile(kotlin("source.kt",
-      """
+    val result = compile(
+      kotlin(
+        "source.kt",
+        """
         import ru.dimsuz.vanilla.annotation.ValidatedAs
 
         @ValidatedAs(Validated::class)
         data class Draft(val firstName: Int?)
         data class Validated(val firstName: String?)
-      """.trimIndent()
-    ))
+        """.trimIndent()
+      )
+    )
 
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
 
@@ -237,15 +264,18 @@ class VanillaProcessorTest {
 
   @Test
   fun validatorInheritsValidatorInterface() {
-    val result = compile(kotlin("source.kt",
-      """
+    val result = compile(
+      kotlin(
+        "source.kt",
+        """
         import ru.dimsuz.vanilla.annotation.ValidatedAs
 
         @ValidatedAs(Validated::class)
         data class Draft(val firstName: Int?)
         data class Validated(val firstName: String?)
-      """.trimIndent()
-    ))
+        """.trimIndent()
+      )
+    )
 
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
 
@@ -264,15 +294,18 @@ class VanillaProcessorTest {
 
   @Test
   fun validatorHasValidateMethod() {
-    val result = compile(kotlin("source.kt",
-      """
+    val result = compile(
+      kotlin(
+        "source.kt",
+        """
         import ru.dimsuz.vanilla.annotation.ValidatedAs
 
         @ValidatedAs(Validated::class)
         data class Draft(val firstName: Int?)
         data class Validated(val firstName: String?)
-      """.trimIndent()
-    ))
+        """.trimIndent()
+      )
+    )
 
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
 
@@ -288,16 +321,19 @@ class VanillaProcessorTest {
 
   @Test
   fun mapsAnnotatedWithValidatedName() {
-    val result = compile(kotlin("source.kt",
-      """
+    val result = compile(
+      kotlin(
+        "source.kt",
+        """
         import ru.dimsuz.vanilla.annotation.ValidatedAs
         import ru.dimsuz.vanilla.annotation.ValidatedName
 
         @ValidatedAs(Validated::class)
         data class Draft(@ValidatedName("address") val addr: Int?)
         data class Validated(val address: String)
-      """.trimIndent()
-    ))
+        """.trimIndent()
+      )
+    )
 
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
 
