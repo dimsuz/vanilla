@@ -23,8 +23,8 @@ class SampleImplementationTest {
     assertThat(exception)
       .hasMessageThat()
       .contains(
-        "missing validation rules for properties: \"firstName\", \"lastName\", " +
-          "\"age\", \"addr\", \"phoneNumbers\", \"friends\""
+        "missing validation rules for properties: \"addr\", \"age\", \"firstName\", \"friends\", " +
+          "\"lastName\", \"phoneNumbers\""
       )
   }
 
@@ -44,8 +44,8 @@ class SampleImplementationTest {
 
     assertThat(exception?.message)
       .contains(
-        "missing validation rules for properties: \"firstName\", \"lastName\", " +
-          "\"age\", \"phoneNumbers\", \"friends\""
+        "missing validation rules for properties: \"age\", \"firstName\", \"friends\", " +
+          "\"lastName\", \"phoneNumbers\""
       )
   }
 

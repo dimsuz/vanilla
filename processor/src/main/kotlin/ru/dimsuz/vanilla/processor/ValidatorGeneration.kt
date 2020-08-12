@@ -88,7 +88,8 @@ private fun createBuilderRuleFunctions(mapping: PropertyMapping): Iterable<FunSp
     FunSpec.builder(sourceProp.name)
       .addParameter("validator", propValidatorType)
       .returns(ClassName("", "Builder").parameterizedBy(TypeVariableName("E")))
-      .addCode("TODO()")
+      .addStatement("%N.remove(%S)", MISSING_RULES_PROPERTY_NAME, sourceProp.name)
+      .addStatement("return this")
       .build()
   }
 }
