@@ -10,82 +10,81 @@ import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.asTypeName
-import com.squareup.kotlinpoet.metadata.ImmutableKmProperty
 import com.squareup.kotlinpoet.metadata.specs.toTypeSpec
 import ru.dimsuz.vanilla.processor.either.Either
-import ru.dimsuz.vanilla.processor.extension.packageName
-import ru.dimsuz.vanilla.processor.extension.simpleName
-import ru.dimsuz.vanilla.processor.extension.toClassName
+import ru.dimsuz.vanilla.processor.extension.enclosingPackageName
 import ru.dimsuz.vanilla.processor.file.writeFile
 import javax.annotation.processing.ProcessingEnvironment
 
-fun generateValidator(processingEnv: ProcessingEnvironment, mapping: PropertyMapping): Either<Error, Unit> {
-  val validatorClassName = createValidatorClassName(mapping)
-  val fileSpec = FileSpec.builder(mapping.models.sourceKmClass.packageName, validatorClassName)
+fun generateValidator(processingEnv: ProcessingEnvironment, analysisResult: SourceAnalysisResult): Either<Error, Unit> {
+  val validatorClassName = createValidatorClassName(analysisResult)
+  val fileSpec = FileSpec.builder(analysisResult.models.sourceElement.enclosingPackageName, validatorClassName)
     .addType(
       TypeSpec
         .classBuilder(validatorClassName)
         .addTypeVariable(TypeVariableName("E"))
-        .addSuperinterface(createValidatorSuperClassName(mapping))
-        .addFunctions(createValidateFunctions(mapping))
-        .addType(createBuilderTypeSpec(mapping))
+        .addSuperinterface(createValidatorSuperClassName(analysisResult))
+        .addFunctions(createValidateFunctions(analysisResult))
+        .addType(createBuilderTypeSpec(analysisResult))
         .build()
     )
     .build()
   return writeFile(processingEnv, fileSpec)
 }
 
-private fun createValidatorClassName(mapping: PropertyMapping): String {
-  return "${mapping.models.sourceKmClass.simpleName}Validator"
+private fun createValidatorClassName(result: SourceAnalysisResult): String {
+  return "${result.models.sourceTypeSpec.name}Validator"
 }
 
-private fun createValidateFunctions(mapping: PropertyMapping): List<FunSpec> {
+private fun createValidateFunctions(analysisResult: SourceAnalysisResult): List<FunSpec> {
+  val sourceClassName = extractSourceClassName(analysisResult)
+  val targetClassName = extractTargetClassName(analysisResult)
   val invokeFunction = FunSpec.builder("invoke")
     .addModifiers(KModifier.OVERRIDE)
-    .addParameter("input", mapping.models.sourceKmClass.toClassName())
-    .returns(
-      RESULT_CLASS_NAME.parameterizedBy(
-        mapping.models.targetKmClass.toClassName(),
-        TypeVariableName("E")
-      )
-    )
+    .addParameter("input", sourceClassName)
+    .returns(RESULT_CLASS_NAME.parameterizedBy(targetClassName, TypeVariableName("E")))
     .addCode("TODO()")
     .build()
   val validateFunction = FunSpec.builder("validate")
-    .addParameter("input", mapping.models.sourceKmClass.toClassName())
-    .returns(
-      RESULT_CLASS_NAME.parameterizedBy(
-        mapping.models.targetKmClass.toClassName(),
-        TypeVariableName("E")
-      )
-    )
+    .addParameter("input", sourceClassName)
+    .returns(RESULT_CLASS_NAME.parameterizedBy(targetClassName, TypeVariableName("E")))
     .addStatement("return %N(input)", invokeFunction)
     .build()
   return listOf(invokeFunction, validateFunction)
 }
 
-private fun createBuilderTypeSpec(mapping: PropertyMapping): TypeSpec {
+private fun extractTargetClassName(analysisResult: SourceAnalysisResult): ClassName {
+  return ClassName(
+    analysisResult.models.targetElement.enclosingPackageName, analysisResult.models.targetTypeSpec.name!!
+  )
+}
+
+private fun extractSourceClassName(analysisResult: SourceAnalysisResult): ClassName {
+  return ClassName(
+    analysisResult.models.sourceElement.enclosingPackageName, analysisResult.models.sourceTypeSpec.name!!
+  )
+}
+
+private fun createBuilderTypeSpec(analysisResult: SourceAnalysisResult): TypeSpec {
   return TypeSpec.classBuilder("Builder")
     .addTypeVariable(TypeVariableName("E"))
-    .addProperties(createBuilderProperties(mapping))
-    .addFunctions(createBuilderRuleFunctions(mapping))
-    .addFunctions(createBuildFunction(mapping))
+    .addProperties(createBuilderProperties(analysisResult))
+    .addFunctions(createBuilderRuleFunctions(analysisResult))
+    .addFunctions(createBuildFunction(analysisResult))
     .build()
 }
 
-private fun createBuilderRuleFunctions(mapping: PropertyMapping): Iterable<FunSpec> {
-  val sourceTypeSpec = mapping.models.sourceKmClass.toTypeSpec(null)
-  val targetTypeSpec = mapping.models.targetKmClass.toTypeSpec(null)
-  return mapping.mapping.map { (sourceProp, targetProp) ->
-    val sourcePropType = sourceTypeSpec.propertySpecs.first { it.name == sourceProp.name }.type
-    val targetPropType = targetTypeSpec.propertySpecs.first { it.name == targetProp.name }.type
+private fun createBuilderRuleFunctions(analysisResult: SourceAnalysisResult): Iterable<FunSpec> {
+  return analysisResult.mapping.map { (sourcePropName, targetPropName) ->
+    val sourcePropType = analysisResult.models.sourceTypeSpec.propertySpecs.first { it.name == sourcePropName }.type
+    val targetPropType = analysisResult.models.targetTypeSpec.propertySpecs.first { it.name == targetPropName }.type
     val propValidatorType = VALIDATOR_CLASS_NAME
       .parameterizedBy(sourcePropType, targetPropType, TypeVariableName("E"))
-    FunSpec.builder(sourceProp.name)
+    FunSpec.builder(sourcePropName)
       .addParameter("validator", propValidatorType)
       .returns(ClassName("", "Builder").parameterizedBy(TypeVariableName("E")))
-      .addStatement("%N.remove(%S)", MISSING_RULES_PROPERTY_NAME, sourceProp.name)
-      .addStatement("%N = validator", createRuleValidatorPropertyName(sourceProp.name))
+      .addStatement("%N.remove(%S)", MISSING_RULES_PROPERTY_NAME, sourcePropName)
+      .addStatement("%N = validator", createRuleValidatorPropertyName(sourcePropName))
       .addStatement("return this")
       .build()
   }
@@ -101,8 +100,8 @@ private fun createCheckMissingRulesFunction(): FunSpec {
     .build()
 }
 
-private fun createBuildFunction(mapping: PropertyMapping): List<FunSpec> {
-  val resultValidatorTypeName = ClassName("", createValidatorClassName(mapping))
+private fun createBuildFunction(analysisResult: SourceAnalysisResult): List<FunSpec> {
+  val resultValidatorTypeName = ClassName("", createValidatorClassName(analysisResult))
   val checkMissingRulesFunction = createCheckMissingRulesFunction()
   return listOf(
     checkMissingRulesFunction,
@@ -114,32 +113,32 @@ private fun createBuildFunction(mapping: PropertyMapping): List<FunSpec> {
   )
 }
 
-private fun createValidatorSuperClassName(mapping: PropertyMapping): ParameterizedTypeName {
+private fun createValidatorSuperClassName(analysisResult: SourceAnalysisResult): ParameterizedTypeName {
   return VALIDATOR_CLASS_NAME
     .parameterizedBy(
-      mapping.models.sourceKmClass.toClassName(),
-      mapping.models.targetKmClass.toClassName(),
+      extractSourceClassName(analysisResult),
+      extractTargetClassName(analysisResult),
       TypeVariableName("E")
     )
 }
 
-private fun createBuilderProperties(mapping: PropertyMapping): List<PropertySpec> {
-  return ArrayList<PropertySpec>(mapping.mapping.size + 1).apply {
-    add(createMissingFieldRulesProperty(mapping.mapping.keys))
-    addAll(createRuleValidatorProperties(mapping))
+private fun createBuilderProperties(analysisResult: SourceAnalysisResult): List<PropertySpec> {
+  return ArrayList<PropertySpec>(analysisResult.mapping.size + 1).apply {
+    add(createMissingFieldRulesProperty(analysisResult.mapping.keys))
+    addAll(createRuleValidatorProperties(analysisResult))
   }
 }
 
-private fun createRuleValidatorProperties(mapping: PropertyMapping): Iterable<PropertySpec> {
-  val sourceTypeSpec = mapping.models.sourceElement.toTypeSpec()
-  val targetTypeSpec = mapping.models.targetElement.toTypeSpec()
-  return mapping.mapping.map { (sourceProp, targetProp) ->
-    val sourcePropType = sourceTypeSpec.propertySpecs.first { it.name == sourceProp.name }.type
-    val targetPropType = targetTypeSpec.propertySpecs.first { it.name == targetProp.name }.type
+private fun createRuleValidatorProperties(analysisResult: SourceAnalysisResult): Iterable<PropertySpec> {
+  val sourceTypeSpec = analysisResult.models.sourceElement.toTypeSpec()
+  val targetTypeSpec = analysisResult.models.targetElement.toTypeSpec()
+  return analysisResult.mapping.map { (sourcePropName, targetPropName) ->
+    val sourcePropType = analysisResult.models.sourceTypeSpec.propertySpecs.first { it.name == sourcePropName }.type
+    val targetPropType = analysisResult.models.targetTypeSpec.propertySpecs.first { it.name == targetPropName }.type
     val typeName = VALIDATOR_CLASS_NAME
       .parameterizedBy(sourcePropType, targetPropType, TypeVariableName("E"))
       .copy(nullable = true)
-    PropertySpec.builder(createRuleValidatorPropertyName(sourceProp.name), typeName, KModifier.PRIVATE)
+    PropertySpec.builder(createRuleValidatorPropertyName(sourcePropName), typeName, KModifier.PRIVATE)
       .mutable(true)
       .initializer("null")
       .build()
@@ -148,12 +147,12 @@ private fun createRuleValidatorProperties(mapping: PropertyMapping): Iterable<Pr
 
 private fun createRuleValidatorPropertyName(sourcePropertyName: String) = "${sourcePropertyName}Validator"
 
-private fun createMissingFieldRulesProperty(sourceProperties: Set<ImmutableKmProperty>): PropertySpec {
+private fun createMissingFieldRulesProperty(sourceProperties: Set<String>): PropertySpec {
   val type = ClassName("kotlin.collections", "MutableList").parameterizedBy(String::class.asTypeName())
   return PropertySpec.builder(MISSING_RULES_PROPERTY_NAME, type, KModifier.PRIVATE)
     .initializer(
       "mutableListOf(" + generateSequence { "%S" }.take(sourceProperties.size).joinToString(",") + ")",
-      *sourceProperties.map { it.name }.toTypedArray()
+      *sourceProperties.map { it }.toTypedArray()
     )
     .build()
 }

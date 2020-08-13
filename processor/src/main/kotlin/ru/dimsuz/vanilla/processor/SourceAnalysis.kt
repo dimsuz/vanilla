@@ -1,6 +1,7 @@
 package ru.dimsuz.vanilla.processor
 
-import com.squareup.kotlinpoet.metadata.ImmutableKmProperty
+import com.squareup.kotlinpoet.PropertySpec
+import com.squareup.kotlinpoet.metadata.specs.toTypeSpec
 import com.squareup.kotlinpoet.metadata.toImmutableKmClass
 import ru.dimsuz.vanilla.annotation.ValidatedAs
 import ru.dimsuz.vanilla.annotation.ValidatedName
@@ -21,37 +22,37 @@ fun findValidationModelPairs(roundEnv: RoundEnvironment): Either<Error, List<Mod
   return roundEnv.getElementsAnnotatedWith(ValidatedAs::class.java).map { element ->
     val sourceElement = element as? TypeElement
     val targetElement = element.extractTargetModelClass()
-    val sourceKmClass = sourceElement?.toImmutableKmClass()
+    val sourceTypeSpec = sourceElement?.toImmutableKmClass()?.toTypeSpec(null)
       .toRightOr("internal error: failed to read source model information")
-    val targetKmClass = targetElement?.toImmutableKmClass()
+    val targetTypeSpec = targetElement?.toImmutableKmClass()?.toTypeSpec(null)
       .toRightOr("internal error: failed to read target model information")
     val sourceTypeElement = Right(sourceElement!!)
     val targetTypeElement = Right(targetElement!!)
-    lift4(sourceKmClass, targetKmClass, sourceTypeElement, targetTypeElement, ::ModelPair)
+    lift4(sourceTypeSpec, targetTypeSpec, sourceTypeElement, targetTypeElement, ::ModelPair)
   }.join()
 }
 
-fun findMatchingProperties(models: ModelPair): Either<Error, PropertyMapping> {
-  val sourceProps = models.sourceKmClass.properties.toSet()
-  val targetProps = models.targetKmClass.properties.toSet()
-  val mapping = mutableMapOf<ImmutableKmProperty, ImmutableKmProperty>()
+fun findMatchingProperties(models: ModelPair): Either<Error, SourceAnalysisResult> {
+  val sourceProps = models.sourceTypeSpec.propertySpecs
+  val targetProps = models.targetTypeSpec.propertySpecs
+  val mapping = mutableMapOf<String, String>()
   sourceProps.forEach { sProp ->
     val tProp = targetProps.find { it.name == sProp.mappedName(models.sourceElement) }
     if (tProp != null) {
-      mapping[sProp] = tProp
+      mapping[sProp.name] = tProp.name
     }
   }
   return if (mapping.isEmpty()) {
     Left(
       "failed to find matching properties. Consider adding @${ValidatedName::class.java.simpleName} " +
-        "annotation to properties of \"${models.sourceKmClass.name}\" class"
+        "annotation to properties of \"${models.sourceTypeSpec.name}\" class"
     )
   } else {
-    Right(PropertyMapping(models, mapping))
+    Right(SourceAnalysisResult(models, mapping))
   }
 }
 
-private fun ImmutableKmProperty.mappedName(sourceTypeElement: TypeElement): String {
+private fun PropertySpec.mappedName(sourceTypeElement: TypeElement): String {
   val annotatedElement = sourceTypeElement.enclosedElements
     .filter { it is VariableElement && it.getAnnotation(ValidatedName::class.java) != null }
     .find { it.simpleName.toString() == this.name }

@@ -1,19 +1,18 @@
 package ru.dimsuz.vanilla.processor
 
-import com.squareup.kotlinpoet.metadata.ImmutableKmClass
-import com.squareup.kotlinpoet.metadata.ImmutableKmProperty
+import com.squareup.kotlinpoet.TypeSpec
 import javax.lang.model.element.TypeElement
 
 typealias Error = String
 
-data class PropertyMapping(
+data class SourceAnalysisResult(
   val models: ModelPair,
-  val mapping: Map<ImmutableKmProperty, ImmutableKmProperty>
+  val mapping: Map<String, String>
 )
 
 data class ModelPair(
-  val sourceKmClass: ImmutableKmClass,
-  val targetKmClass: ImmutableKmClass,
+  val sourceTypeSpec: TypeSpec,
+  val targetTypeSpec: TypeSpec,
   val sourceElement: TypeElement,
   val targetElement: TypeElement
 )
