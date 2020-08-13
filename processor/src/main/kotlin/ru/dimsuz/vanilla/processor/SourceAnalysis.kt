@@ -8,7 +8,7 @@ import ru.dimsuz.vanilla.processor.either.Either
 import ru.dimsuz.vanilla.processor.either.Left
 import ru.dimsuz.vanilla.processor.either.Right
 import ru.dimsuz.vanilla.processor.either.join
-import ru.dimsuz.vanilla.processor.either.lift3
+import ru.dimsuz.vanilla.processor.either.lift4
 import ru.dimsuz.vanilla.processor.either.toRightOr
 import javax.annotation.processing.RoundEnvironment
 import javax.lang.model.element.Element
@@ -19,12 +19,15 @@ import javax.lang.model.type.MirroredTypeException
 
 fun findValidationModelPairs(roundEnv: RoundEnvironment): Either<Error, List<ModelPair>> {
   return roundEnv.getElementsAnnotatedWith(ValidatedAs::class.java).map { element ->
-    val sourceKmClass = (element as? TypeElement)?.toImmutableKmClass()
+    val sourceElement = element as? TypeElement
+    val targetElement = element.extractTargetModelClass()
+    val sourceKmClass = sourceElement?.toImmutableKmClass()
       .toRightOr("internal error: failed to read source model information")
-    val targetKmClass = element.extractTargetModelClass()?.toImmutableKmClass()
+    val targetKmClass = targetElement?.toImmutableKmClass()
       .toRightOr("internal error: failed to read target model information")
-    val sourceTypeElement = Right(element as TypeElement)
-    lift3(sourceKmClass, targetKmClass, sourceTypeElement, ::ModelPair)
+    val sourceTypeElement = Right(sourceElement!!)
+    val targetTypeElement = Right(targetElement!!)
+    lift4(sourceKmClass, targetKmClass, sourceTypeElement, targetTypeElement, ::ModelPair)
   }.join()
 }
 

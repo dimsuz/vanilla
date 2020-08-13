@@ -44,7 +44,7 @@ private fun createValidateFunctions(mapping: PropertyMapping): List<FunSpec> {
     .addModifiers(KModifier.OVERRIDE)
     .addParameter("input", mapping.models.sourceKmClass.toClassName())
     .returns(
-      ClassName("ru.dimsuz.vanilla", "Result").parameterizedBy(
+      RESULT_CLASS_NAME.parameterizedBy(
         mapping.models.targetKmClass.toClassName(),
         TypeVariableName("E")
       )
@@ -54,7 +54,7 @@ private fun createValidateFunctions(mapping: PropertyMapping): List<FunSpec> {
   val validateFunction = FunSpec.builder("validate")
     .addParameter("input", mapping.models.sourceKmClass.toClassName())
     .returns(
-      ClassName("ru.dimsuz.vanilla", "Result").parameterizedBy(
+      RESULT_CLASS_NAME.parameterizedBy(
         mapping.models.targetKmClass.toClassName(),
         TypeVariableName("E")
       )
@@ -79,16 +79,13 @@ private fun createBuilderRuleFunctions(mapping: PropertyMapping): Iterable<FunSp
   return mapping.mapping.map { (sourceProp, targetProp) ->
     val sourcePropType = sourceTypeSpec.propertySpecs.first { it.name == sourceProp.name }.type
     val targetPropType = targetTypeSpec.propertySpecs.first { it.name == targetProp.name }.type
-    val propValidatorType = ClassName("ru.dimsuz.vanilla", "Validator")
-      .parameterizedBy(
-        sourcePropType,
-        targetPropType
-      )
-      .plusParameter(TypeVariableName("E"))
+    val propValidatorType = VALIDATOR_CLASS_NAME
+      .parameterizedBy(sourcePropType, targetPropType, TypeVariableName("E"))
     FunSpec.builder(sourceProp.name)
       .addParameter("validator", propValidatorType)
       .returns(ClassName("", "Builder").parameterizedBy(TypeVariableName("E")))
       .addStatement("%N.remove(%S)", MISSING_RULES_PROPERTY_NAME, sourceProp.name)
+      .addStatement("%N = validator", createRuleValidatorPropertyName(sourceProp.name))
       .addStatement("return this")
       .build()
   }
@@ -118,7 +115,7 @@ private fun createBuildFunction(mapping: PropertyMapping): List<FunSpec> {
 }
 
 private fun createValidatorSuperClassName(mapping: PropertyMapping): ParameterizedTypeName {
-  return ClassName("ru.dimsuz.vanilla", "Validator")
+  return VALIDATOR_CLASS_NAME
     .parameterizedBy(
       mapping.models.sourceKmClass.toClassName(),
       mapping.models.targetKmClass.toClassName(),
@@ -127,10 +124,29 @@ private fun createValidatorSuperClassName(mapping: PropertyMapping): Parameteriz
 }
 
 private fun createBuilderProperties(mapping: PropertyMapping): List<PropertySpec> {
-  return listOf(
-    createMissingFieldRulesProperty(mapping.mapping.keys)
-  )
+  return ArrayList<PropertySpec>(mapping.mapping.size + 1).apply {
+    add(createMissingFieldRulesProperty(mapping.mapping.keys))
+    addAll(createRuleValidatorProperties(mapping))
+  }
 }
+
+private fun createRuleValidatorProperties(mapping: PropertyMapping): Iterable<PropertySpec> {
+  val sourceTypeSpec = mapping.models.sourceElement.toTypeSpec()
+  val targetTypeSpec = mapping.models.targetElement.toTypeSpec()
+  return mapping.mapping.map { (sourceProp, targetProp) ->
+    val sourcePropType = sourceTypeSpec.propertySpecs.first { it.name == sourceProp.name }.type
+    val targetPropType = targetTypeSpec.propertySpecs.first { it.name == targetProp.name }.type
+    val typeName = VALIDATOR_CLASS_NAME
+      .parameterizedBy(sourcePropType, targetPropType, TypeVariableName("E"))
+      .copy(nullable = true)
+    PropertySpec.builder(createRuleValidatorPropertyName(sourceProp.name), typeName, KModifier.PRIVATE)
+      .mutable(true)
+      .initializer("null")
+      .build()
+  }
+}
+
+private fun createRuleValidatorPropertyName(sourcePropertyName: String) = "${sourcePropertyName}Validator"
 
 private fun createMissingFieldRulesProperty(sourceProperties: Set<ImmutableKmProperty>): PropertySpec {
   val type = ClassName("kotlin.collections", "MutableList").parameterizedBy(String::class.asTypeName())
@@ -142,4 +158,6 @@ private fun createMissingFieldRulesProperty(sourceProperties: Set<ImmutableKmPro
     .build()
 }
 
+private val VALIDATOR_CLASS_NAME = ClassName("ru.dimsuz.vanilla", "Validator")
+private val RESULT_CLASS_NAME = ClassName("ru.dimsuz.vanilla", "Result")
 private const val MISSING_RULES_PROPERTY_NAME = "missingFieldRules"
