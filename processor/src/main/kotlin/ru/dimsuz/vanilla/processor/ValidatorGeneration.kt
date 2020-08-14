@@ -4,13 +4,13 @@ import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.ParameterizedTypeName
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.asTypeName
-import com.squareup.kotlinpoet.metadata.specs.toTypeSpec
 import ru.dimsuz.vanilla.processor.either.Either
 import ru.dimsuz.vanilla.processor.extension.enclosingPackageName
 import ru.dimsuz.vanilla.processor.file.writeFile
@@ -19,17 +19,39 @@ import javax.annotation.processing.ProcessingEnvironment
 fun generateValidator(processingEnv: ProcessingEnvironment, analysisResult: SourceAnalysisResult): Either<Error, Unit> {
   val validatorClassName = createValidatorClassName(analysisResult)
   val fileSpec = FileSpec.builder(analysisResult.models.sourceElement.enclosingPackageName, validatorClassName)
-    .addType(
-      TypeSpec
-        .classBuilder(validatorClassName)
-        .addTypeVariable(TypeVariableName("E"))
-        .addSuperinterface(createValidatorSuperClassName(analysisResult))
-        .addFunctions(createValidateFunctions(analysisResult))
-        .addType(createBuilderTypeSpec(analysisResult))
-        .build()
-    )
+    .addType(createValidatorTypeSpec(validatorClassName, analysisResult))
     .build()
   return writeFile(processingEnv, fileSpec)
+}
+
+private fun createValidatorTypeSpec(
+  validatorClassName: String,
+  analysisResult: SourceAnalysisResult
+): TypeSpec {
+  return TypeSpec
+    .classBuilder(validatorClassName)
+    .addTypeVariable(TypeVariableName("E"))
+    .addSuperinterface(createValidatorSuperClassName(analysisResult))
+    .addValidatorPrimaryConstructor(analysisResult)
+    .addFunctions(createValidateFunctions(analysisResult))
+    .addType(createBuilderTypeSpec(analysisResult))
+    .build()
+}
+
+fun TypeSpec.Builder.addValidatorPrimaryConstructor(analysisResult: SourceAnalysisResult): TypeSpec.Builder {
+  val parameters = analysisResult.mapping.map { (sourcePropName, targetPropName) ->
+    val sourcePropType = analysisResult.models.sourceTypeSpec.propertySpecs.first { it.name == sourcePropName }.type
+    val targetPropType = analysisResult.models.targetTypeSpec.propertySpecs.first { it.name == targetPropName }.type
+    val typeName = VALIDATOR_CLASS_NAME.parameterizedBy(sourcePropType, targetPropType, TypeVariableName("E"))
+    ParameterSpec(createRuleValidatorPropertyName(sourcePropName), typeName)
+  }
+  return this
+    .primaryConstructor(FunSpec.constructorBuilder().addModifiers(KModifier.PRIVATE).addParameters(parameters).build())
+    .addProperties(
+      parameters.map {
+        PropertySpec.builder(it.name, it.type, KModifier.PRIVATE).initializer(it.name).build()
+      }
+    )
 }
 
 private fun createValidatorClassName(result: SourceAnalysisResult): String {
@@ -103,12 +125,17 @@ private fun createCheckMissingRulesFunction(): FunSpec {
 private fun createBuildFunction(analysisResult: SourceAnalysisResult): List<FunSpec> {
   val resultValidatorTypeName = ClassName("", createValidatorClassName(analysisResult))
   val checkMissingRulesFunction = createCheckMissingRulesFunction()
+  val propertyNames = analysisResult.mapping.keys.map { createRuleValidatorPropertyName(it) }
   return listOf(
     checkMissingRulesFunction,
     FunSpec.builder("build")
       .returns(resultValidatorTypeName.parameterizedBy(TypeVariableName("E")))
       .addStatement("%N()", checkMissingRulesFunction)
-      .addStatement("return %T()", resultValidatorTypeName)
+      .addStatement(
+        "return %T(${repeatTemplate("%N!!", propertyNames.size)})",
+        resultValidatorTypeName,
+        *propertyNames.toTypedArray()
+      )
       .build()
   )
 }
@@ -130,8 +157,6 @@ private fun createBuilderProperties(analysisResult: SourceAnalysisResult): List<
 }
 
 private fun createRuleValidatorProperties(analysisResult: SourceAnalysisResult): Iterable<PropertySpec> {
-  val sourceTypeSpec = analysisResult.models.sourceElement.toTypeSpec()
-  val targetTypeSpec = analysisResult.models.targetElement.toTypeSpec()
   return analysisResult.mapping.map { (sourcePropName, targetPropName) ->
     val sourcePropType = analysisResult.models.sourceTypeSpec.propertySpecs.first { it.name == sourcePropName }.type
     val targetPropType = analysisResult.models.targetTypeSpec.propertySpecs.first { it.name == targetPropName }.type
@@ -151,10 +176,21 @@ private fun createMissingFieldRulesProperty(sourceProperties: Set<String>): Prop
   val type = ClassName("kotlin.collections", "MutableList").parameterizedBy(String::class.asTypeName())
   return PropertySpec.builder(MISSING_RULES_PROPERTY_NAME, type, KModifier.PRIVATE)
     .initializer(
-      "mutableListOf(" + generateSequence { "%S" }.take(sourceProperties.size).joinToString(",") + ")",
+      "mutableListOf(" + repeatTemplate("%S", sourceProperties.size) + ")",
       *sourceProperties.map { it }.toTypedArray()
     )
     .build()
+}
+
+/**
+ * Repeats template [count] times, for example:
+ *
+ * ```
+ * repeateTemplate("%S", 3) => "%S, %S, %S"
+ * ```
+ */
+private fun repeatTemplate(template: String, count: Int): String {
+  return generateSequence { template }.take(count).joinToString()
 }
 
 private val VALIDATOR_CLASS_NAME = ClassName("ru.dimsuz.vanilla", "Validator")
