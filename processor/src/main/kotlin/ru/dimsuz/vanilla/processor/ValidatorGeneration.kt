@@ -1,6 +1,7 @@
 package ru.dimsuz.vanilla.processor
 
 import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
@@ -11,6 +12,7 @@ import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.asTypeName
+import ru.dimsuz.vanilla.Result
 import ru.dimsuz.vanilla.processor.either.Either
 import ru.dimsuz.vanilla.processor.extension.enclosingPackageName
 import ru.dimsuz.vanilla.processor.file.writeFile
@@ -61,11 +63,29 @@ private fun createValidatorClassName(result: SourceAnalysisResult): String {
 private fun createValidateFunctions(analysisResult: SourceAnalysisResult): List<FunSpec> {
   val sourceClassName = extractSourceClassName(analysisResult)
   val targetClassName = extractTargetClassName(analysisResult)
+  val errorsVariableName = "errors"
+  val validationStatements = createValidationExecStatements(analysisResult, errorsVariableName)
   val invokeFunction = FunSpec.builder("invoke")
     .addModifiers(KModifier.OVERRIDE)
     .addParameter("input", sourceClassName)
     .returns(RESULT_CLASS_NAME.parameterizedBy(targetClassName, TypeVariableName("E")))
-    .addCode("TODO()")
+    .addStatement("val %N = mutableListOf<E>()", errorsVariableName)
+    .addCode(validationStatements.fold(CodeBlock.builder(), { builder, block -> builder.add(block) }).build())
+    .beginControlFlow("return if (%N.isEmpty())", errorsVariableName)
+    .addStatement(
+      "%T(%T(${repeatTemplate("%N = %N!!", analysisResult.mapping.size)}))",
+      Result.Ok::class.asTypeName(),
+      targetClassName,
+      *analysisResult.mapping.flatMap { (_, tProp) -> listOf(tProp, tProp) }.toTypedArray()
+    )
+    .endControlFlow()
+    .beginControlFlow("else")
+    .addStatement(
+      "%1T(%2N.first(), if (%2N.size > 1) %2N.drop(1) else null)",
+      Result.Error::class.asTypeName(),
+      errorsVariableName
+    )
+    .endControlFlow()
     .build()
   val validateFunction = FunSpec.builder("validate")
     .addParameter("input", sourceClassName)
@@ -73,6 +93,30 @@ private fun createValidateFunctions(analysisResult: SourceAnalysisResult): List<
     .addStatement("return %N(input)", invokeFunction)
     .build()
   return listOf(invokeFunction, validateFunction)
+}
+
+@Suppress("SameParameterValue") // intentionally passing here to sync caller/callee
+private fun createValidationExecStatements(
+  analysisResult: SourceAnalysisResult,
+  errorsVariableName: String
+): List<CodeBlock> {
+  return analysisResult.mapping.map { (sProp, tProp) ->
+    CodeBlock.builder()
+      .beginControlFlow(
+        "val %N = when (val result = %N(input.%N))",
+        tProp,
+        createRuleValidatorPropertyName(sProp),
+        sProp
+      )
+      .beginControlFlow("is %T ->", Result.Error::class.asTypeName())
+      .addStatement("%N.add(result.first)", errorsVariableName)
+      .addStatement("if (result.rest != null) %N.addAll(result.rest!!)", errorsVariableName)
+      .addStatement("null")
+      .endControlFlow()
+      .addStatement("is %T -> result.value", Result.Ok::class.asTypeName())
+      .endControlFlow()
+      .build()
+  }
 }
 
 private fun extractTargetClassName(analysisResult: SourceAnalysisResult): ClassName {

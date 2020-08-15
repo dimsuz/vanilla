@@ -105,7 +105,7 @@ class SampleImplementationTest {
       .age(DummyValidator.fail(listOf("age error 1", "age error 2")))
       .addr(DummyValidator.fail("addr error"))
       .phoneNumbers(DummyValidator.fail("phoneNumbers error"))
-      .friends(DummyValidator.fail("friends error 1"))
+      .friends(DummyValidator.fail(listOf("friends error 1", "friends error 2")))
       .build()
       .validate(draft)
 
