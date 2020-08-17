@@ -3,8 +3,8 @@ package ru.dimsuz.vanilla.sample
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 import ru.dimsuz.vanilla.Result
+import ru.dimsuz.vanilla.compose
 import ru.dimsuz.vanilla.sample.dummy.DummyValidator
-import java.lang.Exception
 
 class SampleImplementationTest {
   @Test
@@ -121,117 +121,136 @@ class SampleImplementationTest {
       )
   }
 
-//  @Test
-//  fun `given a set of rules with composer and valid models should correctly chain rules`() {
-//    val draft = createPersonDraftModel(
-//      firstName = "Fiodor",
-//      lastName = "Dostoyevsky",
-//      age = "33",
-//      addr = AddressDraft(city = "Moscow", street = "Tverskaya", house = 3, extraData = emptyMap()),
-//      phoneNumbers = listOf(PhoneNumberDraft(PhoneType.HomePhone, "334455")),
-//      friends = emptyMap(),
-//      extraUnused1 = 3,
-//      extraUnused2 = "none"
-//    )
-//    val expectedAddress = Address(city = "Moscow", street = "Tverskaya", house = 3)
-//    val expectedPhoneNumbers = listOf(PhoneNumber(PhoneType.HomePhone, "334455"))
-//    val expectedPerson = Person(
-//      firstName = "Fiodor3",
-//      lastName = "Dostoyevsky",
-//      age = 33,
-//      address = expectedAddress,
-//      phoneNumbers = expectedPhoneNumbers,
-//      friends = emptyMap()
-//    )
-//
-//    val trace = mutableListOf<String>()
-//
-//    val result = PersonDraftValidator.Builder<String>()
-//      .firstName {
-//        startWith(DummyValidator.success("Fiodor", action = { trace.add("first") }))
-//          .andThen(DummyValidator.success("Fiodor2", action = { trace.add("second") }))
-//          .andThen(DummyValidator.success("Fiodor3", action = { trace.add("third") }))
-//      }
-//      .lastName(ObjectValidator.isNotNull())
-//      .age(DummyValidator.success(33))
-//      .addr(DummyValidator.success(expectedAddress))
-//      .phoneNumbers(DummyValidator.success(expectedPhoneNumbers))
-//      .friends(DummyValidator.success(emptyMap()))
-//      .validate(draft)
-//
-//    assertThat(trace)
-//      .containsExactly("first", "second", "third")
-//    assertThat(result)
-//      .isEqualTo(Right(expectedPerson))
-//  }
-//
-//  @Test
-//  fun `given a set of rules with composer when chain has error should report error and break chain execution`() {
-//    val draft = createPersonDraftModel(
-//      firstName = "Fiodor",
-//      lastName = "Dostoyevsky",
-//      age = "33",
-//      addr = AddressDraft(city = "Moscow", street = "Tverskaya", house = 3, extraData = emptyMap()),
-//      phoneNumbers = listOf(PhoneNumberDraft(PhoneType.HomePhone, "334455")),
-//      friends = emptyMap(),
-//      extraUnused1 = 3,
-//      extraUnused2 = "none"
-//    )
-//    val address = Address(city = "Moscow", street = "Tverskaya", house = 3)
-//
-//    val trace = mutableListOf<String>()
-//
-//    val result = PersonValidator()
-//      .firstName {
-//        startWith(DummyValidator.success("Fiodor", action = { trace.add("first") }))
-//          .andThen<String>(DummyValidator.fail(listOf("error1", "error2"), action = { trace.add("second") }))
-//          .andThen(DummyValidator.success("Fiodor3", action = { trace.add("third") }))
-//      }
-//      .lastName(ObjectValidator.isNotNull())
-//      .age(DummyValidator.success(33))
-//      .addr(DummyValidator.success(address))
-//      .phoneNumbers(DummyValidator.success(emptyList()))
-//      .friends(DummyValidator.success(emptyMap()))
-//      .validate(draft)
-//
-//    assertThat(trace)
-//      .containsExactly("first", "second")
-//    assertThat(result)
-//      .isEqualTo(Left(listOf("error1", "error2")))
-//  }
-//
-//  @Test
-//  fun `given a set of rules when chain has error and non-chain has error should accummulate both`() {
-//    val draft = createPersonDraftModel(
-//      firstName = "Fiodor",
-//      lastName = "Dostoyevsky",
-//      age = "33",
-//      addr = AddressDraft(city = "Moscow", street = "Tverskaya", house = 3, extraData = emptyMap()),
-//      phoneNumbers = listOf(PhoneNumberDraft(PhoneType.HomePhone, "334455")),
-//      friends = emptyMap(),
-//      extraUnused1 = 3,
-//      extraUnused2 = "none"
-//    )
-//    val address = Address(city = "Moscow", street = "Tverskaya", house = 3)
-//
-//    val trace = mutableListOf<String>()
-//
-//    val result = PersonValidator()
-//      .firstName {
-//        startWith(DummyValidator.success("Fiodor", action = { trace.add("first") }))
-//          .andThen<String>(DummyValidator.fail(listOf("error1", "error2"), action = { trace.add("second") }))
-//          .andThen(DummyValidator.success("Fiodor3", action = { trace.add("third") }))
-//      }
-//      .lastName(ObjectValidator.isNotNull())
-//      .age(DummyValidator.fail("some age error"))
-//      .addr(DummyValidator.success(address))
-//      .phoneNumbers(DummyValidator.success(emptyList()))
-//      .friends(DummyValidator.success(emptyMap()))
-//      .validate(draft)
-//
-//    assertThat(result)
-//      .isEqualTo(Left(listOf("error1", "error2", "some age error")))
-//  }
+  @Test
+  fun `given a set of rules with composer and valid models should correctly chain rules`() {
+    val draft = createPersonDraftModel(
+      firstName = "Fiodor",
+      lastName = "Dostoyevsky",
+      age = "33",
+      addr = AddressDraft(city = "Moscow", street = "Tverskaya", house = 3, extraData = emptyMap()),
+      phoneNumbers = listOf(PhoneNumberDraft(PhoneType.HomePhone, "334455")),
+      friends = emptyMap(),
+      extraUnused1 = 3,
+      extraUnused2 = "none"
+    )
+    val expectedAddress = Address(city = "Moscow", street = "Tverskaya", house = 3)
+    val expectedPhoneNumbers = listOf(PhoneNumber(PhoneType.HomePhone, "334455"))
+    val expectedPerson = Person(
+      firstName = "Fiodor3",
+      lastName = "Dostoyevsky",
+      age = 33,
+      address = expectedAddress,
+      phoneNumbers = expectedPhoneNumbers,
+      friends = emptyMap()
+    )
+
+    val trace = mutableListOf<String>()
+
+    val result = PersonDraftValidator.Builder<String>()
+      .firstName(
+        compose {
+          startWith(DummyValidator.success("Fiodor", action = { trace.add("first") }))
+            .andThen(DummyValidator.success("Fiodor2", action = { trace.add("second") }))
+            .andThen(DummyValidator.success("Fiodor3", action = { trace.add("third") }))
+        }
+      )
+      .lastName(isNotNull { "expected not null " })
+      .age(DummyValidator.success(33))
+      .addr(DummyValidator.success(expectedAddress))
+      .phoneNumbers(DummyValidator.success(expectedPhoneNumbers))
+      .friends(DummyValidator.success(emptyMap()))
+      .build()
+      .validate(draft)
+
+    assertThat(trace)
+      .containsExactly("first", "second", "third")
+    assertThat(result)
+      .isEqualTo(Result.Ok(expectedPerson))
+  }
+
+  @Test
+  fun `given a set of rules with composer when chain has error should report error and break chain execution`() {
+    val draft = createPersonDraftModel(
+      firstName = "Fiodor",
+      lastName = "Dostoyevsky",
+      age = "33",
+      addr = AddressDraft(city = "Moscow", street = "Tverskaya", house = 3, extraData = emptyMap()),
+      phoneNumbers = listOf(PhoneNumberDraft(PhoneType.HomePhone, "334455")),
+      friends = emptyMap(),
+      extraUnused1 = 3,
+      extraUnused2 = "none"
+    )
+    val address = Address(city = "Moscow", street = "Tverskaya", house = 3)
+
+    val trace = mutableListOf<String>()
+
+    val result = PersonDraftValidator.Builder<String>()
+      .firstName(
+        compose {
+          startWith(DummyValidator.success("Fiodor", action = { trace.add("first") }))
+            .andThen<String>(
+              DummyValidator.fail(
+                listOf("error1", "error2"),
+                action = { trace.add("second") }
+              )
+            )
+            .andThen(DummyValidator.success("Fiodor3", action = { trace.add("third") }))
+        }
+      )
+      .lastName(isNotNull { "expected not null" })
+      .age(DummyValidator.success(33))
+      .addr(DummyValidator.success(address))
+      .phoneNumbers(DummyValidator.success(emptyList()))
+      .friends(DummyValidator.success(emptyMap()))
+      .build()
+      .validate(draft)
+
+    assertThat(trace)
+      .containsExactly("first", "second")
+    assertThat(result)
+      .isEqualTo(Result.Error("error1", listOf("error2")))
+  }
+
+  @Test
+  fun `given a set of rules when chain has error and non-chain has error should accummulate both`() {
+    val draft = createPersonDraftModel(
+      firstName = "Fiodor",
+      lastName = "Dostoyevsky",
+      age = "33",
+      addr = AddressDraft(city = "Moscow", street = "Tverskaya", house = 3, extraData = emptyMap()),
+      phoneNumbers = listOf(PhoneNumberDraft(PhoneType.HomePhone, "334455")),
+      friends = emptyMap(),
+      extraUnused1 = 3,
+      extraUnused2 = "none"
+    )
+    val address = Address(city = "Moscow", street = "Tverskaya", house = 3)
+
+    val trace = mutableListOf<String>()
+
+    val result = PersonDraftValidator.Builder<String>()
+      .firstName(
+        compose {
+          startWith(DummyValidator.success("Fiodor", action = { trace.add("first") }))
+            .andThen<String>(
+              DummyValidator.fail(
+                listOf("error1", "error2"),
+                action = { trace.add("second") }
+              )
+            )
+            .andThen(DummyValidator.success("Fiodor3", action = { trace.add("third") }))
+        }
+      )
+      .lastName(isNotNull { "expected not null" })
+      .age(DummyValidator.fail("some age error"))
+      .addr(DummyValidator.success(address))
+      .phoneNumbers(DummyValidator.success(emptyList()))
+      .friends(DummyValidator.success(emptyMap()))
+      .build()
+      .validate(draft)
+
+    assertThat(result)
+      .isEqualTo(Result.Error("error1", listOf("error2", "some age error")))
+  }
 }
 
 private fun createPersonDraftModel(
