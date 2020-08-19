@@ -1,11 +1,7 @@
 package ru.dimsuz.vanilla.sample
 
-import ru.dimsuz.vanilla.Validator
 import ru.dimsuz.vanilla.toOkOrElse
-
-fun <T : Any, E> isNotNull(errorProvider: (T?) -> E): Validator<T?, T, E> {
-  return { input -> input.toOkOrElse(errorProvider) }
-}
+import ru.dimsuz.vanilla.validator.isNotNull
 
 fun main() {
   val validator = PersonDraftValidator.Builder<String>()
