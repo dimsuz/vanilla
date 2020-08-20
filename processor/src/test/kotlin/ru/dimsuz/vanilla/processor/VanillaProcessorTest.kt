@@ -352,13 +352,11 @@ class VanillaProcessorTest {
   }
 
   private fun assertIsValidatorType(type: ImmutableKmType?) {
-    assertThat(type?.classifier).isEqualTo(KmClassifier.Class("kotlin/Function1"))
+    assertThat(type?.classifier).isEqualTo(KmClassifier.Class("ru/dimsuz/vanilla/Validator"))
   }
 
   private fun ImmutableKmType?.withResultOkArg(body: (ImmutableKmType?) -> Unit) {
-    val type = this?.arguments?.getOrNull(1)?.type
-    assertThat(type?.classifier).isEqualTo(KmClassifier.Class("ru/dimsuz/vanilla/Result"))
-    body(type?.arguments?.firstOrNull()?.type)
+    body(this?.arguments?.getOrNull(1)?.type)
   }
 
   private fun ImmutableKmType?.withFirstTypeArg(body: (ImmutableKmType?) -> Unit) {

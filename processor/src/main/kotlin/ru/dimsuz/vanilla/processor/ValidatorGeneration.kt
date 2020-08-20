@@ -65,7 +65,7 @@ private fun createValidateFunctions(analysisResult: SourceAnalysisResult): List<
   val targetClassName = extractTargetClassName(analysisResult)
   val errorsVariableName = "errors"
   val validationStatements = createValidationExecStatements(analysisResult, errorsVariableName)
-  val invokeFunction = FunSpec.builder("invoke")
+  val validateFunction = FunSpec.builder("validate")
     .addModifiers(KModifier.OVERRIDE)
     .addParameter("input", sourceClassName)
     .returns(RESULT_CLASS_NAME.parameterizedBy(targetClassName, TypeVariableName("E")))
@@ -87,12 +87,7 @@ private fun createValidateFunctions(analysisResult: SourceAnalysisResult): List<
     )
     .endControlFlow()
     .build()
-  val validateFunction = FunSpec.builder("validate")
-    .addParameter("input", sourceClassName)
-    .returns(RESULT_CLASS_NAME.parameterizedBy(targetClassName, TypeVariableName("E")))
-    .addStatement("return %N(input)", invokeFunction)
-    .build()
-  return listOf(invokeFunction, validateFunction)
+  return listOf(validateFunction)
 }
 
 @Suppress("SameParameterValue") // intentionally passing here to sync caller/callee
@@ -103,7 +98,7 @@ private fun createValidationExecStatements(
   return analysisResult.mapping.map { (sProp, tProp) ->
     CodeBlock.builder()
       .beginControlFlow(
-        "val %N = when (val result = %N(input.%N))",
+        "val %N = when (val result = %N.validate(input.%N))",
         tProp,
         createRuleValidatorPropertyName(sProp),
         sProp

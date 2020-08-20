@@ -17,21 +17,23 @@ internal class SimpleValidatorComposer<I, E> :
     }
 
     override fun <O> build(): Validator<CI, O, E> {
-      return { input ->
-        var currentInput = input as Any
-        var errorResult: Result<O, E>? = null
-        for (v in validators) {
-          when (val result = v(currentInput)) {
-            is Result.Error -> {
-              errorResult = result as Result<O, E>
+      return object : Validator<CI, O, E> {
+        override fun validate(input: CI): Result<O, E> {
+          var currentInput = input as Any
+          var errorResult: Result<O, E>? = null
+          for (v in validators) {
+            when (val result = v.validate(currentInput)) {
+              is Result.Error -> {
+                errorResult = result as Result<O, E>
+              }
+              is Result.Ok -> {
+                currentInput = result.value
+              }
             }
-            is Result.Ok -> {
-              currentInput = result.value
-            }
+            if (errorResult != null) break
           }
-          if (errorResult != null) break
+          return errorResult ?: (Result.Ok(currentInput) as Result<O, E>)
         }
-        errorResult ?: (Result.Ok(currentInput) as Result<O, E>)
       }
     }
   }

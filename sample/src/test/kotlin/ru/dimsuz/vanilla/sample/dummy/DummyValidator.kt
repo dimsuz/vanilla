@@ -24,7 +24,7 @@ class DummyValidator<I, O> private constructor(
     }
   }
 
-  override fun invoke(input: I): Result<O, String> {
+  override fun validate(input: I): Result<O, String> {
     return if (output != null) {
       onRight?.invoke()
       Result.Ok(output)
