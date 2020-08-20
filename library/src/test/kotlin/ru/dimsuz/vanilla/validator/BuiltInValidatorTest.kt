@@ -155,4 +155,46 @@ class BuiltInValidatorTest {
     assertThat(result3)
       .isEqualTo(Result.Ok("hell"))
   }
+
+  @Test
+  fun greaterThanLengthSuccessOnEnoughLength() {
+    val validator = hasLengthGreaterThan(5) { "error" }
+    val result1 = validator("123456")
+    val result2 = validator("1234567")
+
+    assertThat(result1)
+      .isEqualTo(Result.Ok("123456"))
+    assertThat(result2)
+      .isEqualTo(Result.Ok("1234567"))
+  }
+
+  @Test
+  fun greaterThanLengthFailsOnShortLength() {
+    val validator = hasLengthGreaterThan(5) { "error '$it'" }
+    val result = validator("12345")
+
+    assertThat(result)
+      .isEqualTo(Result.Error("error '12345'"))
+  }
+
+  @Test
+  fun lessThanLengthSuccessOnEnoughLength() {
+    val validator = hasLengthLessThan(5) { "error" }
+    val result1 = validator("1234")
+    val result2 = validator("123")
+
+    assertThat(result1)
+      .isEqualTo(Result.Ok("1234"))
+    assertThat(result2)
+      .isEqualTo(Result.Ok("123"))
+  }
+
+  @Test
+  fun lessThanLengthFailsOnShortLength() {
+    val validator = hasLengthLessThan(5) { "error '$it'" }
+    val result = validator("12345")
+
+    assertThat(result)
+      .isEqualTo(Result.Error("error '12345'"))
+  }
 }

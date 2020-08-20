@@ -37,6 +37,20 @@ fun <E> hasLengthLessThanOrEqualTo(
   }
 }
 
+fun <E> hasLengthGreaterThan(
+  length: Int,
+  errorProvider: (failedInput: String) -> E
+): Validator<String, String, E> {
+  return hasLengthGreaterThanOrEqualTo(length + 1, errorProvider)
+}
+
+fun <E> hasLengthLessThan(
+  length: Int,
+  errorProvider: (failedInput: String) -> E
+): Validator<String, String, E> {
+  return hasLengthLessThanOrEqualTo(length - 1, errorProvider)
+}
+
 fun <E> hasLengthInRange(
   min: Int,
   max: Int,
