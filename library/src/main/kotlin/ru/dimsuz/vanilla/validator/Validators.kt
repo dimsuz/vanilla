@@ -19,7 +19,7 @@ fun <E> isNotBlank(errorProvider: (failedInput: String) -> E): Validator<String,
   }
 }
 
-fun <E> minimumLength(
+fun <E> hasLengthGreaterThanOrEqualTo(
   length: Int,
   errorProvider: (failedInput: String) -> E
 ): Validator<String, String, E> {
@@ -28,7 +28,7 @@ fun <E> minimumLength(
   }
 }
 
-fun <E> maximumLength(
+fun <E> hasLengthLessThanOrEqualTo(
   length: Int,
   errorProvider: (failedInput: String) -> E
 ): Validator<String, String, E> {
@@ -37,7 +37,7 @@ fun <E> maximumLength(
   }
 }
 
-fun <E> lengthInRange(
+fun <E> hasLengthInRange(
   min: Int,
   max: Int,
   errorProvider: (failedInput: String) -> E

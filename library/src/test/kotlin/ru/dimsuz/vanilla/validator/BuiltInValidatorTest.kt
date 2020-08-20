@@ -70,7 +70,7 @@ class BuiltInValidatorTest {
 
   @Test
   fun minimumLengthSuccessOnEnoughLength() {
-    val validator = minimumLength(5) { "error" }
+    val validator = hasLengthGreaterThanOrEqualTo(5) { "error" }
     val result1 = validator("world")
     val result2 = validator("worldd")
 
@@ -82,7 +82,7 @@ class BuiltInValidatorTest {
 
   @Test
   fun minimumLengthFailsOnShortLength() {
-    val validator = minimumLength(5) { "error '$it'" }
+    val validator = hasLengthGreaterThanOrEqualTo(5) { "error '$it'" }
     val result = validator("worl")
 
     assertThat(result)
@@ -91,7 +91,7 @@ class BuiltInValidatorTest {
 
   @Test
   fun maximumLengthSuccessOnEnoughLength() {
-    val validator = maximumLength(5) { "error" }
+    val validator = hasLengthLessThanOrEqualTo(5) { "error" }
     val result1 = validator("world")
     val result2 = validator("worl")
     val result3 = validator("")
@@ -106,7 +106,7 @@ class BuiltInValidatorTest {
 
   @Test
   fun maximumLengthFailsOnLargeLength() {
-    val validator = maximumLength(5) { "error '$it'" }
+    val validator = hasLengthLessThanOrEqualTo(5) { "error '$it'" }
     val result = validator("worldd")
 
     assertThat(result)
@@ -117,7 +117,7 @@ class BuiltInValidatorTest {
   fun lengthInRangeThrowsOnInvalidRange() {
     var error: Exception? = null
     try {
-      lengthInRange(3, 2) { "error" }
+      hasLengthInRange(3, 2) { "error" }
     } catch (e: Exception) {
       error = e
     }
@@ -129,7 +129,7 @@ class BuiltInValidatorTest {
 
   @Test
   fun lengthInRangeFailsOnOutOfRangeValues() {
-    val validator = lengthInRange(2, 4) { "error '$it'" }
+    val validator = hasLengthInRange(2, 4) { "error '$it'" }
 
     val result1 = validator("h")
     val result2 = validator("hello")
@@ -142,7 +142,7 @@ class BuiltInValidatorTest {
 
   @Test
   fun lengthInRangeSuccessOnInRangeValues() {
-    val validator = lengthInRange(2, 4) { "error '$it'" }
+    val validator = hasLengthInRange(2, 4) { "error '$it'" }
 
     val result1 = validator("he")
     val result2 = validator("hel")
