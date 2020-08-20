@@ -5,8 +5,8 @@ import ru.dimsuz.vanilla.validator.isNotNull
 
 fun main() {
   val validator = PersonDraftValidator.Builder<String>()
-    .firstName(isNotNull { "expected not null first name" })
-    .lastName(isNotNull { "expected not null second name" })
+    .firstName(isNotNull("expected not null first name"))
+    .lastName(isNotNull("expected not null second name"))
     // TODO use compose isNotNull + toInt
     .age { input -> input?.toIntOrNull().toOkOrElse { "error must be not null string convertible to int" } }
     .build()

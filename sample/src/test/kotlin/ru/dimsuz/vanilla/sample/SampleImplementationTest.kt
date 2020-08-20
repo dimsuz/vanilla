@@ -5,6 +5,7 @@ import org.junit.Test
 import ru.dimsuz.vanilla.Result
 import ru.dimsuz.vanilla.compose
 import ru.dimsuz.vanilla.sample.dummy.DummyValidator
+import ru.dimsuz.vanilla.validator.isNotNull
 
 class SampleImplementationTest {
   @Test
@@ -73,8 +74,8 @@ class SampleImplementationTest {
     )
 
     val result = PersonDraftValidator.Builder<String>()
-      .firstName(isNotNull { "first name is null" })
-      .lastName(isNotNull { "last name is null" })
+      .firstName(isNotNull("first name is null"))
+      .lastName(isNotNull("last name is null"))
       .age(DummyValidator.success(33))
       .addr(DummyValidator.success(expectedAddress))
       .phoneNumbers(DummyValidator.success(expectedPhoneNumbers))
@@ -154,7 +155,7 @@ class SampleImplementationTest {
             .andThen(DummyValidator.success("Fiodor3", action = { trace.add("third") }))
         }
       )
-      .lastName(isNotNull { "expected not null " })
+      .lastName(isNotNull("expected not null "))
       .age(DummyValidator.success(33))
       .addr(DummyValidator.success(expectedAddress))
       .phoneNumbers(DummyValidator.success(expectedPhoneNumbers))
@@ -197,7 +198,7 @@ class SampleImplementationTest {
             .andThen(DummyValidator.success("Fiodor3", action = { trace.add("third") }))
         }
       )
-      .lastName(isNotNull { "expected not null" })
+      .lastName(isNotNull("expected not null"))
       .age(DummyValidator.success(33))
       .addr(DummyValidator.success(address))
       .phoneNumbers(DummyValidator.success(emptyList()))
@@ -240,7 +241,7 @@ class SampleImplementationTest {
             .andThen(DummyValidator.success("Fiodor3", action = { trace.add("third") }))
         }
       )
-      .lastName(isNotNull { "expected not null" })
+      .lastName(isNotNull("expected not null"))
       .age(DummyValidator.fail("some age error"))
       .addr(DummyValidator.success(address))
       .phoneNumbers(DummyValidator.success(emptyList()))
