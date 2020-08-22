@@ -1,16 +1,27 @@
 package ru.dimsuz.vanilla.sample
 
-import ru.dimsuz.vanilla.toOkOrElse
+import ru.dimsuz.vanilla.Result
+import ru.dimsuz.vanilla.Validator
+import ru.dimsuz.vanilla.compose
 import ru.dimsuz.vanilla.validator.isNotNull
 
 fun main() {
-  val validator = PersonDraftValidator.Builder<String>()
+  val validator = PersonDraftValidatorBuilder<String>()
     .firstName(isNotNull("expected not null first name"))
     .lastName(isNotNull("expected not null second name"))
-    // TODO use compose isNotNull + toInt
-    .age { input -> input?.toIntOrNull().toOkOrElse { "error must be not null string convertible to int" } }
+    .age(
+      compose {
+        startWith<String>(isNotNull("age must not be null"))
+          .andThen(
+            Validator { input ->
+              input.toIntOrNull()?.let { Result.Ok(it) }
+                ?: Result.Error("error must be not null string convertible to int")
+            }
+          )
+      }
+    )
     .build()
-  validator(
+  validator.validate(
     PersonDraft(
       firstName = null,
       lastName = null,

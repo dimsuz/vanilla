@@ -5,6 +5,7 @@ import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.LambdaTypeName
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.ParameterizedTypeName
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
@@ -13,86 +14,18 @@ import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.asTypeName
 import ru.dimsuz.vanilla.Result
+import ru.dimsuz.vanilla.Validator
 import ru.dimsuz.vanilla.processor.either.Either
 import ru.dimsuz.vanilla.processor.extension.enclosingPackageName
 import ru.dimsuz.vanilla.processor.file.writeFile
 import javax.annotation.processing.ProcessingEnvironment
 
 fun generateValidator(processingEnv: ProcessingEnvironment, analysisResult: SourceAnalysisResult): Either<Error, Unit> {
-  val validatorClassName = createValidatorClassName(analysisResult)
-  val fileSpec = FileSpec.builder(analysisResult.models.sourceElement.enclosingPackageName, validatorClassName)
-    .addType(createValidatorTypeSpec(validatorClassName, analysisResult))
+  val builderTypeSpec = createBuilderTypeSpec(analysisResult)
+  val fileSpec = FileSpec.builder(analysisResult.models.sourceElement.enclosingPackageName, builderTypeSpec.name!!)
+    .addType(builderTypeSpec)
     .build()
   return writeFile(processingEnv, fileSpec)
-}
-
-private fun createValidatorTypeSpec(
-  validatorClassName: String,
-  analysisResult: SourceAnalysisResult
-): TypeSpec {
-  return TypeSpec
-    .classBuilder(validatorClassName)
-    .addTypeVariable(TypeVariableName("E"))
-    .addSuperinterface(createValidatorSuperClassName(analysisResult))
-    .addValidatorPrimaryConstructor(analysisResult)
-    .addFunctions(createValidateFunctions(analysisResult))
-    .addType(createBuilderTypeSpec(analysisResult))
-    .build()
-}
-
-fun TypeSpec.Builder.addValidatorPrimaryConstructor(analysisResult: SourceAnalysisResult): TypeSpec.Builder {
-  val parameters = analysisResult.mapping.map { (sourcePropName, targetPropName) ->
-    val sourcePropType = analysisResult.models.sourceTypeSpec.propertySpecs.first { it.name == sourcePropName }.type
-    val targetPropType = analysisResult.models.targetTypeSpec.propertySpecs.first { it.name == targetPropName }.type
-    val typeName = VALIDATOR_CLASS_NAME.parameterizedBy(sourcePropType, targetPropType, TypeVariableName("E"))
-    ParameterSpec(createRuleValidatorPropertyName(sourcePropName), typeName)
-  }
-  return this
-    .primaryConstructor(FunSpec.constructorBuilder().addModifiers(KModifier.PRIVATE).addParameters(parameters).build())
-    .addProperties(
-      parameters.map {
-        PropertySpec.builder(it.name, it.type, KModifier.PRIVATE).initializer(it.name).build()
-      }
-    )
-}
-
-private fun createValidatorClassName(result: SourceAnalysisResult): String {
-  return "${result.models.sourceTypeSpec.name}Validator"
-}
-
-private fun createValidateFunctions(analysisResult: SourceAnalysisResult): List<FunSpec> {
-  val sourceClassName = extractSourceClassName(analysisResult)
-  val targetClassName = extractTargetClassName(analysisResult)
-  val errorsVariableName = "errors"
-  val validationStatements = createValidationExecStatements(analysisResult, errorsVariableName)
-  val invokeFunction = FunSpec.builder("invoke")
-    .addModifiers(KModifier.OVERRIDE)
-    .addParameter("input", sourceClassName)
-    .returns(RESULT_CLASS_NAME.parameterizedBy(targetClassName, TypeVariableName("E")))
-    .addStatement("val %N = mutableListOf<E>()", errorsVariableName)
-    .addCode(validationStatements.fold(CodeBlock.builder(), { builder, block -> builder.add(block) }).build())
-    .beginControlFlow("return if (%N.isEmpty())", errorsVariableName)
-    .addStatement(
-      "%T(%T(${repeatTemplate("%N = %N!!", analysisResult.mapping.size)}))",
-      Result.Ok::class.asTypeName(),
-      targetClassName,
-      *analysisResult.mapping.flatMap { (_, tProp) -> listOf(tProp, tProp) }.toTypedArray()
-    )
-    .endControlFlow()
-    .beginControlFlow("else")
-    .addStatement(
-      "%1T(%2N.first(), if (%2N.size > 1) %2N.drop(1) else null)",
-      Result.Error::class.asTypeName(),
-      errorsVariableName
-    )
-    .endControlFlow()
-    .build()
-  val validateFunction = FunSpec.builder("validate")
-    .addParameter("input", sourceClassName)
-    .returns(RESULT_CLASS_NAME.parameterizedBy(targetClassName, TypeVariableName("E")))
-    .addStatement("return %N(input)", invokeFunction)
-    .build()
-  return listOf(invokeFunction, validateFunction)
 }
 
 @Suppress("SameParameterValue") // intentionally passing here to sync caller/callee
@@ -103,7 +36,7 @@ private fun createValidationExecStatements(
   return analysisResult.mapping.map { (sProp, tProp) ->
     CodeBlock.builder()
       .beginControlFlow(
-        "val %N = when (val result = %N(input.%N))",
+        "val %N = when (val result = %N.validate(input.%N))",
         tProp,
         createRuleValidatorPropertyName(sProp),
         sProp
@@ -132,15 +65,20 @@ private fun extractSourceClassName(analysisResult: SourceAnalysisResult): ClassN
 }
 
 private fun createBuilderTypeSpec(analysisResult: SourceAnalysisResult): TypeSpec {
-  return TypeSpec.classBuilder("Builder")
+  val className = ClassName("", "${analysisResult.models.sourceTypeSpec.name}ValidatorBuilder")
+  return TypeSpec.classBuilder(className)
     .addTypeVariable(TypeVariableName("E"))
     .addProperties(createBuilderProperties(analysisResult))
-    .addFunctions(createBuilderRuleFunctions(analysisResult))
+    .addFunctions(createBuilderRuleFunctions(className, analysisResult))
     .addFunctions(createBuildFunction(analysisResult))
+    .addType(createBuilderCompanionObject(analysisResult))
     .build()
 }
 
-private fun createBuilderRuleFunctions(analysisResult: SourceAnalysisResult): Iterable<FunSpec> {
+private fun createBuilderRuleFunctions(
+  builderClassName: ClassName,
+  analysisResult: SourceAnalysisResult
+): Iterable<FunSpec> {
   return analysisResult.mapping.map { (sourcePropName, targetPropName) ->
     val sourcePropType = analysisResult.models.sourceTypeSpec.propertySpecs.first { it.name == sourcePropName }.type
     val targetPropType = analysisResult.models.targetTypeSpec.propertySpecs.first { it.name == targetPropName }.type
@@ -148,7 +86,7 @@ private fun createBuilderRuleFunctions(analysisResult: SourceAnalysisResult): It
       .parameterizedBy(sourcePropType, targetPropType, TypeVariableName("E"))
     FunSpec.builder(sourcePropName)
       .addParameter("validator", propValidatorType)
-      .returns(ClassName("", "Builder").parameterizedBy(TypeVariableName("E")))
+      .returns(builderClassName.parameterizedBy(TypeVariableName("E")))
       .addStatement("%N.remove(%S)", MISSING_RULES_PROPERTY_NAME, sourcePropName)
       .addStatement("%N = validator", createRuleValidatorPropertyName(sourcePropName))
       .addStatement("return this")
@@ -167,27 +105,90 @@ private fun createCheckMissingRulesFunction(): FunSpec {
 }
 
 private fun createBuildFunction(analysisResult: SourceAnalysisResult): List<FunSpec> {
-  val resultValidatorTypeName = ClassName("", createValidatorClassName(analysisResult))
   val checkMissingRulesFunction = createCheckMissingRulesFunction()
   val propertyNames = analysisResult.mapping.keys.map { createRuleValidatorPropertyName(it) }
   return listOf(
     checkMissingRulesFunction,
     FunSpec.builder("build")
-      .returns(resultValidatorTypeName.parameterizedBy(TypeVariableName("E")))
+      .returns(createValidatorParameterizedName(analysisResult))
       .addStatement("%N()", checkMissingRulesFunction)
       .addStatement(
-        "return %T(${repeatTemplate("%N!!", propertyNames.size)})",
-        resultValidatorTypeName,
+        "return %T(%N(${repeatTemplate("%N!!", propertyNames.size)}))",
+        Validator::class,
+        CREATE_VALIDATE_FUNCTION_NAME,
         *propertyNames.toTypedArray()
       )
       .build()
   )
 }
 
-private fun createValidatorSuperClassName(analysisResult: SourceAnalysisResult): ParameterizedTypeName {
+private fun createBuilderCompanionObject(analysisResult: SourceAnalysisResult): TypeSpec {
+  return TypeSpec.companionObjectBuilder()
+    .addFunction(createValidateFunction(analysisResult))
+    .build()
+}
+
+private fun createValidateFunction(analysisResult: SourceAnalysisResult): FunSpec {
+  val parameters = analysisResult.mapping.map { (sourcePropName, targetPropName) ->
+    val sourcePropType = analysisResult.models.sourceTypeSpec.propertySpecs.first { it.name == sourcePropName }.type
+    val targetPropType = analysisResult.models.targetTypeSpec.propertySpecs.first { it.name == targetPropName }.type
+    val typeName = VALIDATOR_CLASS_NAME.parameterizedBy(sourcePropType, targetPropType, TypeVariableName("E"))
+    ParameterSpec(createRuleValidatorPropertyName(sourcePropName), typeName)
+  }
+  return FunSpec
+    .builder(CREATE_VALIDATE_FUNCTION_NAME)
+    .addTypeVariable(TypeVariableName("E"))
+    .returns(
+      LambdaTypeName.get(
+        parameters = listOf(ParameterSpec.unnamed(extractSourceClassName(analysisResult))),
+        returnType = createResultParameterizedByTargetName(analysisResult)
+      )
+    )
+    .addModifiers(KModifier.PRIVATE)
+    .addParameters(parameters)
+    .addCode(createValidateFunctionBody(analysisResult))
+    .build()
+}
+
+private fun createValidateFunctionBody(analysisResult: SourceAnalysisResult): CodeBlock {
+  val targetClassName = extractTargetClassName(analysisResult)
+  val errorsVariableName = "errors"
+  val validationStatements = createValidationExecStatements(analysisResult, errorsVariableName)
+  return CodeBlock.builder()
+    .beginControlFlow("return { input ->") // BEGIN FLOW_A
+    .addStatement("val %N = mutableListOf<E>()", errorsVariableName)
+    .add(validationStatements.fold(CodeBlock.builder(), { builder, block -> builder.add(block) }).build())
+    .beginControlFlow("if (%N.isEmpty())", errorsVariableName) // BEGIN FLOW_B
+    .addStatement(
+      "%T(%T(${repeatTemplate("%N = %N!!", analysisResult.mapping.size)}))",
+      Result.Ok::class.asTypeName(),
+      targetClassName,
+      *analysisResult.mapping.flatMap { (_, tProp) -> listOf(tProp, tProp) }.toTypedArray()
+    )
+    .endControlFlow() // END FLOW_B
+    .beginControlFlow("else") // BEGIN FLOW_C
+    .addStatement(
+      "%1T(%2N.first(), if (%2N.size > 1) %2N.drop(1) else null)",
+      Result.Error::class.asTypeName(),
+      errorsVariableName
+    )
+    .endControlFlow() // END FLOW_C
+    .endControlFlow() // END FLOW_A
+    .build()
+}
+
+private fun createValidatorParameterizedName(analysisResult: SourceAnalysisResult): ParameterizedTypeName {
   return VALIDATOR_CLASS_NAME
     .parameterizedBy(
       extractSourceClassName(analysisResult),
+      extractTargetClassName(analysisResult),
+      TypeVariableName("E")
+    )
+}
+
+private fun createResultParameterizedByTargetName(analysisResult: SourceAnalysisResult): ParameterizedTypeName {
+  return RESULT_CLASS_NAME
+    .parameterizedBy(
       extractTargetClassName(analysisResult),
       TypeVariableName("E")
     )
@@ -239,4 +240,5 @@ private fun repeatTemplate(template: String, count: Int): String {
 
 private val VALIDATOR_CLASS_NAME = ClassName("ru.dimsuz.vanilla", "Validator")
 private val RESULT_CLASS_NAME = ClassName("ru.dimsuz.vanilla", "Result")
+private const val CREATE_VALIDATE_FUNCTION_NAME = "createValidateFunction"
 private const val MISSING_RULES_PROPERTY_NAME = "missingFieldRules"

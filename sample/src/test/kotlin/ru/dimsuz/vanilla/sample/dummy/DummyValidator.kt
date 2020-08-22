@@ -3,34 +3,29 @@ package ru.dimsuz.vanilla.sample.dummy
 import ru.dimsuz.vanilla.Result
 import ru.dimsuz.vanilla.Validator
 
-class DummyValidator<I, O> private constructor(
-  private val output: O?,
-  private val errors: List<String>?,
-  private val onRight: (() -> Unit)?,
-  private val onLeft: (() -> Unit)?
-) : Validator<I, O, String> {
+class DummyValidator {
 
   companion object {
-    fun <I, O> success(output: O, action: (() -> Unit)? = null): DummyValidator<I, O> {
-      return DummyValidator(output, null, onRight = action, onLeft = null)
+    fun <I, O> success(output: O, action: (() -> Unit)? = null): Validator<I, O, String> {
+      return Validator {
+        action?.invoke()
+        Result.Ok(output)
+      }
     }
 
-    fun <I, O> fail(error: String, action: (() -> Unit)? = null): DummyValidator<I, O> {
-      return DummyValidator(null, listOf(error), onRight = null, onLeft = action)
+    fun <I, O> fail(error: String, action: (() -> Unit)? = null): Validator<I, O, String> {
+      return Validator {
+        action?.invoke()
+        Result.Error(error)
+      }
     }
 
-    fun <I, O> fail(errors: List<String>, action: (() -> Unit)? = null): DummyValidator<I, O> {
-      return DummyValidator(null, errors, onRight = null, onLeft = action)
-    }
-  }
-
-  override fun invoke(input: I): Result<O, String> {
-    return if (output != null) {
-      onRight?.invoke()
-      Result.Ok(output)
-    } else {
-      onLeft?.invoke()
-      Result.Error(errors!!.first(), if (errors.size == 1) null else errors.drop(1))
+    fun <I, O> fail(errors: List<String>, action: (() -> Unit)? = null): Validator<I, O, String> {
+      require(errors.size > 1) { "use other fail overload for 1 error" }
+      return Validator {
+        action?.invoke()
+        Result.Error(errors.first(), errors.drop(1))
+      }
     }
   }
 }
