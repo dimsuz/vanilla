@@ -4,6 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.squareup.kotlinpoet.metadata.ImmutableKmType
 import com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview
 import com.squareup.kotlinpoet.metadata.isNullable
+import com.squareup.kotlinpoet.metadata.isPrivate
 import com.squareup.kotlinpoet.metadata.toImmutableKmClass
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
@@ -97,7 +98,7 @@ class VanillaProcessorTest {
 
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
 
-    val validatorClass = result.classLoader.loadClass("DraftValidator\$Builder").toImmutableKmClass()
+    val validatorClass = result.classLoader.loadClass("DraftValidatorBuilder").toImmutableKmClass()
     assertThat(validatorClass.functions.map { it.name })
       .containsAtLeast("firstName", "lastName")
   }
@@ -122,7 +123,7 @@ class VanillaProcessorTest {
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
 
     val builderClass = result.classLoader
-      .loadClass("ru.dimsuz.vanilla.test.DraftValidator\$Builder")
+      .loadClass("ru.dimsuz.vanilla.test.DraftValidatorBuilder")
       .toImmutableKmClass()
     assertThat(builderClass.functions.map { it.name })
       .containsAtLeast("firstName", "isAdult")
@@ -145,7 +146,7 @@ class VanillaProcessorTest {
 
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
 
-    val builderClass = result.classLoader.loadClass("DraftValidator\$Builder").toImmutableKmClass()
+    val builderClass = result.classLoader.loadClass("DraftValidatorBuilder").toImmutableKmClass()
     assertThat(builderClass.typeParameters.map { it.name })
       .containsExactly("E")
   }
@@ -167,7 +168,7 @@ class VanillaProcessorTest {
 
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
 
-    val validatorClass = result.classLoader.loadClass("DraftValidator\$Builder").toImmutableKmClass()
+    val validatorClass = result.classLoader.loadClass("DraftValidatorBuilder").toImmutableKmClass()
 
     val ruleFunction = validatorClass.functions.first { it.name == "firstName" }
     assertThat(ruleFunction.valueParameters).hasSize(1)
@@ -183,7 +184,7 @@ class VanillaProcessorTest {
     }
 
     assertThat(ruleFunction.returnType.classifier)
-      .isEqualTo(KmClassifier.Class("DraftValidator.Builder"))
+      .isEqualTo(KmClassifier.Class("DraftValidatorBuilder"))
   }
 
   @Test
@@ -206,7 +207,7 @@ class VanillaProcessorTest {
 
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
 
-    val builderClass = result.classLoader.loadClass("DraftValidator\$Builder").toImmutableKmClass()
+    val builderClass = result.classLoader.loadClass("DraftValidatorBuilder").toImmutableKmClass()
 
     val ruleFunction = builderClass.functions.first { it.name == "firstName" }
     assertThat(ruleFunction.valueParameters).hasSize(1)
@@ -254,69 +255,11 @@ class VanillaProcessorTest {
 
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
 
-    val builderClass = result.classLoader.loadClass("DraftValidator\$Builder").toImmutableKmClass()
+    val builderClass = result.classLoader.loadClass("DraftValidatorBuilder").toImmutableKmClass()
     val buildFunction = builderClass.functions.find { it.name == "build" }
     assertThat(buildFunction).isNotNull()
     assertThat(buildFunction!!.valueParameters).isEmpty()
-    assertThat(buildFunction.returnType.classifier)
-      .isEqualTo(KmClassifier.Class("DraftValidator"))
-  }
-
-  @Test
-  fun validatorInheritsValidatorInterface() {
-    val result = compile(
-      kotlin(
-        "source.kt",
-        """
-        import ru.dimsuz.vanilla.annotation.ValidatedAs
-
-        @ValidatedAs(Validated::class)
-        data class Draft(val firstName: Int?)
-        data class Validated(val firstName: String?)
-        """.trimIndent()
-      )
-    )
-
-    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
-
-    val validatorClass = result.classLoader.loadClass("DraftValidator").toImmutableKmClass()
-    val supertype = validatorClass.supertypes.single()
-    assertIsValidatorType(supertype)
-    supertype.withFirstTypeArg { type ->
-      assertThat(type?.classifier)
-        .isEqualTo(KmClassifier.Class("Draft"))
-    }
-    supertype.withResultOkArg { type ->
-      assertThat(type?.classifier)
-        .isEqualTo(KmClassifier.Class("Validated"))
-    }
-  }
-
-  @Test
-  fun validatorHasValidateMethod() {
-    val result = compile(
-      kotlin(
-        "source.kt",
-        """
-        import ru.dimsuz.vanilla.annotation.ValidatedAs
-
-        @ValidatedAs(Validated::class)
-        data class Draft(val firstName: Int?)
-        data class Validated(val firstName: String?)
-        """.trimIndent()
-      )
-    )
-
-    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
-
-    val validatorClass = result.classLoader.loadClass("DraftValidator").toImmutableKmClass()
-    val validateFunction = validatorClass.functions.find { it.name == "validate" }
-    assertThat(validateFunction).isNotNull()
-    assertThat(validateFunction?.valueParameters).hasSize(1)
-    assertThat(validateFunction?.valueParameters?.single()?.type?.classifier)
-      .isEqualTo(KmClassifier.Class("Draft"))
-    assertThat(validateFunction?.valueParameters?.single()?.type?.isNullable)
-      .isFalse()
+    assertIsValidatorType(buildFunction.returnType)
   }
 
   @Test
@@ -337,7 +280,7 @@ class VanillaProcessorTest {
 
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
 
-    val builderClass = result.classLoader.loadClass("DraftValidator\$Builder").toImmutableKmClass()
+    val builderClass = result.classLoader.loadClass("DraftValidatorBuilder").toImmutableKmClass()
     val ruleFunction = builderClass.functions.find { it.name == "addr" }
     val parameter = ruleFunction?.valueParameters?.firstOrNull()
     assertThat(ruleFunction).isNotNull()
@@ -351,14 +294,45 @@ class VanillaProcessorTest {
     }
   }
 
+  @Test
+  fun hasCompanionObjectWithValidateFunction() {
+    val result = compile(
+      kotlin(
+        "source.kt",
+        """
+        import ru.dimsuz.vanilla.annotation.ValidatedAs
+        import ru.dimsuz.vanilla.annotation.ValidatedName
+
+        @ValidatedAs(Validated::class)
+        data class Draft(@ValidatedName("address") val addr: Int?)
+        data class Validated(val address: String)
+        """.trimIndent()
+      )
+    )
+
+    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
+
+    val builderClass = result.classLoader.loadClass("DraftValidatorBuilder").toImmutableKmClass()
+    val companionClass = builderClass.companionObject?.let {
+      result.classLoader.loadClass("DraftValidatorBuilder$$it").toImmutableKmClass()
+    }
+    val createValidateFunction = companionClass?.functions?.find { it.name == "createValidateFunction" }
+    assertThat(createValidateFunction).isNotNull()
+    assertThat(createValidateFunction?.isPrivate).isTrue()
+    assertThat(createValidateFunction?.returnType?.classifier)
+      .isEqualTo(KmClassifier.Class("kotlin/Function1"))
+    assertThat(createValidateFunction?.returnType?.arguments?.get(0)?.type?.classifier)
+      .isEqualTo(KmClassifier.Class("Draft"))
+    assertThat(createValidateFunction?.returnType?.arguments?.get(1)?.type?.arguments?.get(0)?.type?.classifier)
+      .isEqualTo(KmClassifier.Class("Validated"))
+  }
+
   private fun assertIsValidatorType(type: ImmutableKmType?) {
-    assertThat(type?.classifier).isEqualTo(KmClassifier.Class("kotlin/Function1"))
+    assertThat(type?.classifier).isEqualTo(KmClassifier.Class("ru/dimsuz/vanilla/Validator"))
   }
 
   private fun ImmutableKmType?.withResultOkArg(body: (ImmutableKmType?) -> Unit) {
-    val type = this?.arguments?.getOrNull(1)?.type
-    assertThat(type?.classifier).isEqualTo(KmClassifier.Class("ru/dimsuz/vanilla/Result"))
-    body(type?.arguments?.firstOrNull()?.type)
+    body(this?.arguments?.getOrNull(1)?.type)
   }
 
   private fun ImmutableKmType?.withFirstTypeArg(body: (ImmutableKmType?) -> Unit) {

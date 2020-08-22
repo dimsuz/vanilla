@@ -1,6 +1,6 @@
 package ru.dimsuz.vanilla
 
-typealias Validator<I, O, E> = (I) -> Result<O, E>
+inline class Validator<I, O, E>(val validate: (I) -> Result<O, E>)
 
 sealed class Result<out T, out E> {
   data class Ok<out T>(val value: T) : Result<T, Nothing>()

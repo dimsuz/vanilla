@@ -14,7 +14,7 @@ class SampleImplementationTest {
 
     var exception: Exception? = null
     try {
-      PersonDraftValidator.Builder<String>()
+      PersonDraftValidatorBuilder<String>()
         .build()
         .validate(draft)
     } catch (e: Exception) {
@@ -35,7 +35,7 @@ class SampleImplementationTest {
 
     var exception: Exception? = null
     try {
-      PersonDraftValidator.Builder<String>()
+      PersonDraftValidatorBuilder<String>()
         .addr(DummyValidator.success(createAddressModel()))
         .build()
         .validate(draft)
@@ -73,7 +73,7 @@ class SampleImplementationTest {
       friends = emptyMap()
     )
 
-    val result = PersonDraftValidator.Builder<String>()
+    val result = PersonDraftValidatorBuilder<String>()
       .firstName(isNotNull("first name is null"))
       .lastName(isNotNull("last name is null"))
       .age(DummyValidator.success(33))
@@ -100,7 +100,7 @@ class SampleImplementationTest {
       extraUnused2 = "none"
     )
 
-    val result = PersonDraftValidator.Builder<String>()
+    val result = PersonDraftValidatorBuilder<String>()
       .firstName(DummyValidator.success("Fiodor"))
       .lastName(DummyValidator.fail("lastName error"))
       .age(DummyValidator.fail(listOf("age error 1", "age error 2")))
@@ -147,7 +147,7 @@ class SampleImplementationTest {
 
     val trace = mutableListOf<String>()
 
-    val result = PersonDraftValidator.Builder<String>()
+    val result = PersonDraftValidatorBuilder<String>()
       .firstName(
         compose {
           startWith(DummyValidator.success("Fiodor", action = { trace.add("first") }))
@@ -185,7 +185,7 @@ class SampleImplementationTest {
 
     val trace = mutableListOf<String>()
 
-    val result = PersonDraftValidator.Builder<String>()
+    val result = PersonDraftValidatorBuilder<String>()
       .firstName(
         compose {
           startWith(DummyValidator.success("Fiodor", action = { trace.add("first") }))
@@ -228,7 +228,7 @@ class SampleImplementationTest {
 
     val trace = mutableListOf<String>()
 
-    val result = PersonDraftValidator.Builder<String>()
+    val result = PersonDraftValidatorBuilder<String>()
       .firstName(
         compose {
           startWith(DummyValidator.success("Fiodor", action = { trace.add("first") }))
