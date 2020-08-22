@@ -1,10 +1,7 @@
 package ru.dimsuz.vanilla.validator
 
 import ru.dimsuz.vanilla.Result
-import ru.dimsuz.vanilla.SimpleValidatorComposer
-import ru.dimsuz.vanilla.StartedValidatorComposer
 import ru.dimsuz.vanilla.Validator
-import ru.dimsuz.vanilla.ValidatorComposer
 
 fun <T : Any, E> isNotNull(error: E): Validator<T?, T, E> {
   return object : Validator<T?, T, E> {
