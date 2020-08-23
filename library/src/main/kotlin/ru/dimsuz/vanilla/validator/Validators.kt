@@ -61,3 +61,39 @@ fun <E> hasLengthInRange(
     if (input.length in (min..max)) Result.Ok(input) else Result.Error(errorProvider(input))
   }
 }
+
+fun <T : Comparable<T>, E> isLessThan(
+  value: T,
+  errorProvider: (failedInput: T) -> E
+): Validator<T, T, E> {
+  return Validator { input ->
+    if (input < value) Result.Ok(input) else Result.Error(errorProvider(input))
+  }
+}
+
+fun <T : Comparable<T>, E> isLessThanOrEqual(
+  value: T,
+  errorProvider: (failedInput: T) -> E
+): Validator<T, T, E> {
+  return Validator { input ->
+    if (input <= value) Result.Ok(input) else Result.Error(errorProvider(input))
+  }
+}
+
+fun <T : Comparable<T>, E> isGreaterThan(
+  value: T,
+  errorProvider: (failedInput: T) -> E
+): Validator<T, T, E> {
+  return Validator { input ->
+    if (input > value) Result.Ok(input) else Result.Error(errorProvider(input))
+  }
+}
+
+fun <T : Comparable<T>, E> isGreaterThanOrEqual(
+  value: T,
+  errorProvider: (failedInput: T) -> E
+): Validator<T, T, E> {
+  return Validator { input ->
+    if (input >= value) Result.Ok(input) else Result.Error(errorProvider(input))
+  }
+}

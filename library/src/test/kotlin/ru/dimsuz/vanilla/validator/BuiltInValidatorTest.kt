@@ -197,4 +197,94 @@ class BuiltInValidatorTest {
     assertThat(result)
       .isEqualTo(Result.Error("error '12345'"))
   }
+
+  @Test
+  fun isLessThanSucceedsOnValidValue() {
+    val validator = isLessThan(5L) { "error '$it'" }
+    val result = validator.validate(4)
+
+    assertThat(result)
+      .isEqualTo(Result.Ok(4L))
+  }
+
+  @Test
+  fun isLessThanFailsOnInvalidValue() {
+    val validator = isLessThan(5L) { "error '$it'" }
+    val result1 = validator.validate(5)
+    val result2 = validator.validate(6)
+
+    assertThat(result1)
+      .isEqualTo(Result.Error("error '5'"))
+    assertThat(result2)
+      .isEqualTo(Result.Error("error '6'"))
+  }
+
+  @Test
+  fun isLessThanOrEqualSucceedsOnValidValue() {
+    val validator = isLessThanOrEqual(5L) { "error '$it'" }
+    val result1 = validator.validate(5)
+    val result2 = validator.validate(4)
+
+    assertThat(result1)
+      .isEqualTo(Result.Ok(5L))
+    assertThat(result2)
+      .isEqualTo(Result.Ok(4L))
+  }
+
+  @Test
+  fun isLessThanOrEqualFailsOnInvalidValue() {
+    val validator = isLessThanOrEqual(5L) { "error '$it'" }
+    val result1 = validator.validate(6)
+    val result2 = validator.validate(7)
+
+    assertThat(result1)
+      .isEqualTo(Result.Error("error '6'"))
+    assertThat(result2)
+      .isEqualTo(Result.Error("error '7'"))
+  }
+
+  @Test
+  fun isGreaterThanSucceedsOnValidValue() {
+    val validator = isGreaterThan(5L) { "error '$it'" }
+    val result = validator.validate(6)
+
+    assertThat(result)
+      .isEqualTo(Result.Ok(6L))
+  }
+
+  @Test
+  fun isGreaterThanFailsOnInvalidValue() {
+    val validator = isGreaterThan(5L) { "error '$it'" }
+    val result1 = validator.validate(5)
+    val result2 = validator.validate(4)
+
+    assertThat(result1)
+      .isEqualTo(Result.Error("error '5'"))
+    assertThat(result2)
+      .isEqualTo(Result.Error("error '4'"))
+  }
+
+  @Test
+  fun isGreaterThanOrEqualSucceedsOnValidValue() {
+    val validator = isGreaterThanOrEqual(5L) { "error '$it'" }
+    val result1 = validator.validate(5)
+    val result2 = validator.validate(6)
+
+    assertThat(result1)
+      .isEqualTo(Result.Ok(5L))
+    assertThat(result2)
+      .isEqualTo(Result.Ok(6L))
+  }
+
+  @Test
+  fun isGreaterThanOrEqualFailsOnInvalidValue() {
+    val validator = isGreaterThanOrEqual(5L) { "error '$it'" }
+    val result1 = validator.validate(4)
+    val result2 = validator.validate(3)
+
+    assertThat(result1)
+      .isEqualTo(Result.Error("error '4'"))
+    assertThat(result2)
+      .isEqualTo(Result.Error("error '3'"))
+  }
 }
