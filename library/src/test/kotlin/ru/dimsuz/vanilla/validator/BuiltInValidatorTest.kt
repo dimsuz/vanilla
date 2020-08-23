@@ -3,6 +3,7 @@ package ru.dimsuz.vanilla.validator
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 import ru.dimsuz.vanilla.Result
+import ru.dimsuz.vanilla.Validator
 
 class BuiltInValidatorTest {
   @Test
@@ -286,5 +287,43 @@ class BuiltInValidatorTest {
       .isEqualTo(Result.Error("error '4'"))
     assertThat(result2)
       .isEqualTo(Result.Error("error '3'"))
+  }
+
+  @Test
+  fun eachElementMapsOnSuccess() {
+    val validator = eachElement(Validator<Int, String, String> { input -> Result.Ok(input.toString()) })
+
+    val result = validator.validate(setOf(33, 88))
+
+    assertThat(result)
+      .isEqualTo(Result.Ok(listOf("33", "88")))
+  }
+
+  @Test
+  fun eachElementCollectsAllErrorsOnFailure() {
+    val validator = eachElement(
+      Validator<Int, String, String> { input ->
+        when (input) {
+          88 -> Result.Ok(input.toString())
+          77 -> Result.Error("error '$input.1'", listOf("error '$input.2'"))
+          else -> Result.Error("error '$input'")
+        }
+      }
+    )
+
+    val result = validator.validate(setOf(33, 88, 77, 55))
+
+    assertThat(result)
+      .isEqualTo(Result.Error("error '33'", listOf("error '77.1'", "error '77.2'", "error '55'")))
+  }
+
+  @Test
+  fun eachElementReturnsOkOnEmptyList() {
+    val validator = eachElement(Validator<Int, String, String> { input -> Result.Ok(input.toString()) })
+
+    val result = validator.validate(emptyList())
+
+    assertThat(result)
+      .isEqualTo(Result.Ok(emptyList<String>()))
   }
 }

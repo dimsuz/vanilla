@@ -116,3 +116,17 @@ fun <T : Comparable<T>, E> isGreaterThanOrEqual(
     if (input >= value) Result.Ok(input) else Result.Error(errorProvider(input))
   }
 }
+
+fun <I : Iterable<IE>, IE, O, E> eachElement(
+  elementValidator: Validator<IE, O, E>,
+): Validator<I, List<O>, E> {
+  return Validator { input ->
+    val results = input.asSequence().map { elementValidator.validate(it) }
+    if (results.all { it is Result.Ok }) {
+      Result.Ok(results.map { (it as Result.Ok).value }.toList())
+    } else {
+      val errors = results.filterIsInstance<Result.Error<E>>().flatMap { sequenceOf(it.first) + it.rest.orEmpty() }
+      Result.Error(errors.first(), errors.drop(1).toList().takeIf { it.isNotEmpty() })
+    }
+  }
+}
