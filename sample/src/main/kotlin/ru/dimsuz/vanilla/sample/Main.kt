@@ -11,7 +11,7 @@ fun main() {
     .lastName(isNotNull("expected not null second name"))
     .age(
       compose {
-        startWith<String>(isNotNull("age must not be null"))
+        startWith(isNotNull("age must not be null"))
           .andThen(
             Validator { input ->
               input.toIntOrNull()?.let { Result.Ok(it) }
