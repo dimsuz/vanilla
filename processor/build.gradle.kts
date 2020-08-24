@@ -11,11 +11,9 @@ dependencies {
 
 tasks {
   compileKotlin {
-    kotlinOptions.jvmTarget = "1.8"
     kotlinOptions.freeCompilerArgs += "-Xopt-in=com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview"
   }
   compileTestKotlin {
-    kotlinOptions.jvmTarget = "1.8"
     kotlinOptions.freeCompilerArgs += "-Xopt-in=com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview"
   }
 }
