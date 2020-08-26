@@ -11,6 +11,7 @@ dependencies {
 
 tasks {
   compileKotlin {
+    kotlinOptions.freeCompilerArgs += listOf("-module-name", "vanilla-processor")
     kotlinOptions.freeCompilerArgs += "-Xopt-in=com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview"
   }
   compileTestKotlin {
