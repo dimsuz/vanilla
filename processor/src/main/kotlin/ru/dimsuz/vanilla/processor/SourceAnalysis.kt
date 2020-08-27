@@ -36,7 +36,7 @@ fun findValidationModelPairs(roundEnv: RoundEnvironment): Either<Error, List<Mod
 fun findMatchingProperties(models: ModelPair): Either<Error, SourceAnalysisResult> {
   // See NOTE_PROPERTY_SORTING_ORDER
   val sourceProps = models.sourceTypeSpec.propertySpecs.sortedByDeclarationOrderIn(models.sourceElement)
-  val targetProps = models.targetTypeSpec.propertySpecs
+  val targetProps = models.targetTypeSpec.propertySpecs.sortedByDeclarationOrderIn(models.targetElement)
   val mapping = mutableMapOf<String, String>()
   sourceProps.forEach { sProp ->
     val tProp = targetProps.find { it.name == sProp.mappedName(models.sourceElement) }
@@ -50,7 +50,8 @@ fun findMatchingProperties(models: ModelPair): Either<Error, SourceAnalysisResul
         "annotation to properties of \"${models.sourceTypeSpec.name}\" class"
     )
   } else {
-    Right(SourceAnalysisResult(models, mapping))
+    val unmappedTargetProperties = targetProps.filterTo(mutableSetOf()) { !mapping.containsValue(it.name) }
+    Right(SourceAnalysisResult(models, mapping, unmappedTargetProperties))
   }
 }
 

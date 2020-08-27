@@ -37,7 +37,8 @@ enum class PhoneType { HomePhone, WorkPhone, CellPhone, OtherPhone }
 data class Address(
   val city: String,
   val street: String,
-  val house: Int
+  val house: Int,
+  val districtNameId: String?
 )
 
 data class PhoneNumber(

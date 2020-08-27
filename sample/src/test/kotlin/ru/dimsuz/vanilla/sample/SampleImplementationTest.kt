@@ -62,7 +62,7 @@ class SampleImplementationTest {
       extraUnused1 = 3,
       extraUnused2 = "none"
     )
-    val expectedAddress = Address(city = "Moscow", street = "Tverskaya", house = 3)
+    val expectedAddress = Address(city = "Moscow", street = "Tverskaya", house = 3, districtNameId = null)
     val expectedPhoneNumbers = listOf(PhoneNumber(PhoneType.HomePhone, "334455"))
     val expectedPerson = Person(
       firstName = "Fiodor",
@@ -134,7 +134,7 @@ class SampleImplementationTest {
       extraUnused1 = 3,
       extraUnused2 = "none"
     )
-    val expectedAddress = Address(city = "Moscow", street = "Tverskaya", house = 3)
+    val expectedAddress = Address(city = "Moscow", street = "Tverskaya", house = 3, districtNameId = null)
     val expectedPhoneNumbers = listOf(PhoneNumber(PhoneType.HomePhone, "334455"))
     val expectedPerson = Person(
       firstName = "Fiodor3",
@@ -181,7 +181,7 @@ class SampleImplementationTest {
       extraUnused1 = 3,
       extraUnused2 = "none"
     )
-    val address = Address(city = "Moscow", street = "Tverskaya", house = 3)
+    val address = Address(city = "Moscow", street = "Tverskaya", house = 3, districtNameId = null)
 
     val trace = mutableListOf<String>()
 
@@ -224,7 +224,7 @@ class SampleImplementationTest {
       extraUnused1 = 3,
       extraUnused2 = "none"
     )
-    val address = Address(city = "Moscow", street = "Tverskaya", house = 3)
+    val address = Address(city = "Moscow", street = "Tverskaya", house = 3, districtNameId = null)
 
     val trace = mutableListOf<String>()
 
@@ -251,6 +251,21 @@ class SampleImplementationTest {
 
     assertThat(result)
       .isEqualTo(Result.Error("error1", listOf("error2", "some age error")))
+  }
+
+  @Test
+  fun `given a model with extra target field, correctly constructs validated target`() {
+    val validator = AddressDraftValidatorBuilder<String>()
+      .city(isNotNull("null city"))
+      .house(isNotNull("null house"))
+      .street(isNotNull("null street"))
+      .buildWith("hubba bubba")
+
+    val result = validator.validate(AddressDraft("fjfj", "fjfj", 33, emptyMap()))
+    assertThat(result)
+      .isInstanceOf(Result.Ok::class.java)
+    assertThat((result as Result.Ok).value.districtNameId)
+      .isEqualTo("hubba bubba")
   }
 }
 
@@ -280,6 +295,7 @@ private fun createAddressModel(): Address {
   return Address(
     city = "Kaliningrad",
     street = "Epronovskaya",
-    house = 33
+    house = 33,
+    districtNameId = "334"
   )
 }

@@ -107,19 +107,34 @@ private fun createCheckMissingRulesFunction(): FunSpec {
 private fun createBuildFunction(analysisResult: SourceAnalysisResult): List<FunSpec> {
   val checkMissingRulesFunction = createCheckMissingRulesFunction()
   val propertyNames = analysisResult.mapping.keys.map { createRuleValidatorPropertyName(it) }
+  val name = if (analysisResult.unmappedTargetProperties.isEmpty()) "build" else "buildWith"
+  val parameters = createUnmappedParameterSpecs(analysisResult)
+  val propertyNamesTemplate = repeatTemplate("%N!!", propertyNames.size)
+  val unmappedPropertyNamesTemplate = if (parameters.isNotEmpty()) {
+    repeatTemplate("%N", parameters.size, prefix = ", ")
+  } else ""
   return listOf(
     checkMissingRulesFunction,
-    FunSpec.builder("build")
+    FunSpec.builder(name)
+      .addParameters(parameters)
       .returns(createValidatorParameterizedName(analysisResult))
       .addStatement("%N()", checkMissingRulesFunction)
       .addStatement(
-        "return %T(%N(${repeatTemplate("%N!!", propertyNames.size)}))",
+        "return %T(%N($propertyNamesTemplate$unmappedPropertyNamesTemplate))",
         Validator::class,
         CREATE_VALIDATE_FUNCTION_NAME,
-        *propertyNames.toTypedArray()
+        *(propertyNames + parameters.map { it.name }).toTypedArray()
       )
       .build()
   )
+}
+
+private fun createUnmappedParameterSpecs(analysisResult: SourceAnalysisResult): List<ParameterSpec> {
+  return if (analysisResult.unmappedTargetProperties.isNotEmpty()) {
+    analysisResult.unmappedTargetProperties.map { property ->
+      ParameterSpec.builder(property.name, property.type).build()
+    }
+  } else emptyList()
 }
 
 private fun createBuilderCompanionObject(analysisResult: SourceAnalysisResult): TypeSpec {
@@ -135,6 +150,7 @@ private fun createValidateFunction(analysisResult: SourceAnalysisResult): FunSpe
     val typeName = VALIDATOR_CLASS_NAME.parameterizedBy(sourcePropType, targetPropType, TypeVariableName("E"))
     ParameterSpec(createRuleValidatorPropertyName(sourcePropName), typeName)
   }
+  val unmappedParameters = createUnmappedParameterSpecs(analysisResult)
   return FunSpec
     .builder(CREATE_VALIDATE_FUNCTION_NAME)
     .addTypeVariable(TypeVariableName("E"))
@@ -145,7 +161,7 @@ private fun createValidateFunction(analysisResult: SourceAnalysisResult): FunSpe
       )
     )
     .addModifiers(KModifier.PRIVATE)
-    .addParameters(parameters)
+    .addParameters(parameters + unmappedParameters)
     .addCode(createValidateFunctionBody(analysisResult))
     .build()
 }
@@ -154,16 +170,21 @@ private fun createValidateFunctionBody(analysisResult: SourceAnalysisResult): Co
   val targetClassName = extractTargetClassName(analysisResult)
   val errorsVariableName = "errors"
   val validationStatements = createValidationExecStatements(analysisResult, errorsVariableName)
+  val unmappedPropertyNames = analysisResult.unmappedTargetProperties.map { it.name }
+  val validatorParametersTemplate = repeatTemplate("%N = %N!!", analysisResult.mapping.size)
+  val unmappedParametersTemplate = if (unmappedPropertyNames.isNotEmpty()) {
+    repeatTemplate("%N = %N", unmappedPropertyNames.size, prefix = ", ")
+  } else ""
   return CodeBlock.builder()
     .beginControlFlow("return { input ->") // BEGIN FLOW_A
     .addStatement("val %N = mutableListOf<E>()", errorsVariableName)
     .add(validationStatements.fold(CodeBlock.builder(), { builder, block -> builder.add(block) }).build())
     .beginControlFlow("if (%N.isEmpty())", errorsVariableName) // BEGIN FLOW_B
     .addStatement(
-      "%T(%T(${repeatTemplate("%N = %N!!", analysisResult.mapping.size)}))",
+      "%T(%T($validatorParametersTemplate$unmappedParametersTemplate))",
       Result.Ok::class.asTypeName(),
       targetClassName,
-      *analysisResult.mapping.flatMap { (_, tProp) -> listOf(tProp, tProp) }.toTypedArray()
+      *(analysisResult.mapping.values + unmappedPropertyNames).flatMap { name -> listOf(name, name) }.toTypedArray()
     )
     .endControlFlow() // END FLOW_B
     .beginControlFlow("else") // BEGIN FLOW_C
@@ -231,11 +252,11 @@ private fun createMissingFieldRulesProperty(sourceProperties: Set<String>): Prop
  * Repeats template [count] times, for example:
  *
  * ```
- * repeateTemplate("%S", 3) => "%S, %S, %S"
+ * repeatTemplate("%S", 3) => "%S, %S, %S"
  * ```
  */
-private fun repeatTemplate(template: String, count: Int): String {
-  return generateSequence { template }.take(count).joinToString()
+private fun repeatTemplate(template: String, count: Int, prefix: String = "", suffix: String = ""): String {
+  return generateSequence { template }.take(count).joinToString(prefix = prefix.orEmpty(), postfix = suffix.orEmpty())
 }
 
 private val VALIDATOR_CLASS_NAME = ClassName("ru.dimsuz.vanilla", "Validator")

@@ -327,6 +327,41 @@ class VanillaProcessorTest {
       .isEqualTo(KmClassifier.Class("Validated"))
   }
 
+  @Test
+  fun generatesBuildWith() {
+    val result = compile(
+      kotlin(
+        "source.kt",
+        """
+        import ru.dimsuz.vanilla.annotation.ValidatedAs
+        import ru.dimsuz.vanilla.annotation.ValidatedName
+
+        @ValidatedAs(Validated::class)
+        data class Draft(val address: Int?)
+        data class Validated(val address: Int, val cityId: String, val titleMapping: Map<Int, String>)
+        """.trimIndent()
+      )
+    )
+
+    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
+
+    val builderClass = result.classLoader.loadClass("DraftValidatorBuilder").toImmutableKmClass()
+    val buildFunction = builderClass.functions.find { it.name == "buildWith" }
+    assertThat(buildFunction).isNotNull()
+    assertThat(buildFunction!!.valueParameters).hasSize(2)
+    val firstParam = buildFunction.valueParameters[0]
+    val secondParam = buildFunction.valueParameters[1]
+    assertThat(firstParam.name).isEqualTo("cityId")
+    assertThat(firstParam.type?.classifier).isEqualTo(KmClassifier.Class("kotlin/String"))
+    assertThat(secondParam.name).isEqualTo("titleMapping")
+    assertThat(secondParam.type?.classifier).isEqualTo(KmClassifier.Class("kotlin/collections/Map"))
+  }
+
+  // TODO gives an error if source and target have properties but no match can be found
+  // TODO generates property validator signature which has target field type if it differs from source
+  // TODO generates properly if source/target classes are inside another class
+  // TODO generates properly if source/target classes are inside another interface
+
   private fun assertIsValidatorType(type: ImmutableKmType?) {
     assertThat(type?.classifier).isEqualTo(KmClassifier.Class("ru/dimsuz/vanilla/Validator"))
   }
@@ -338,13 +373,6 @@ class VanillaProcessorTest {
   private fun ImmutableKmType?.withFirstTypeArg(body: (ImmutableKmType?) -> Unit) {
     body(this?.arguments?.getOrNull(0)?.type)
   }
-
-  // TODO works ok if target has more properties than source
-  // TODO gives an error if source and target have properties but no match can be found
-  // TODO generates property validator signature which has target field type if it differs from source
-  // TODO generates properly if source/target classes are inside another class
-  // TODO generates properly if source/target classes are inside another interface
-
   private fun prepareCompilation(vararg sourceFiles: SourceFile): KotlinCompilation {
     return KotlinCompilation()
       .apply {
