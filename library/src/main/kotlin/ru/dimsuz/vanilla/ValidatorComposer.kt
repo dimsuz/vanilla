@@ -9,8 +9,3 @@ interface StartedValidatorComposer<I, O1, E> {
   fun <O> build(): Validator<I, O, E>
 }
 
-fun <I, O, E> compose(
-  body: ValidatorComposer<I, E>.() -> StartedValidatorComposer<I, O, E>
-): Validator<I, O, E> {
-  return body(SimpleValidatorComposer()).build()
-}

@@ -4,6 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 import ru.dimsuz.vanilla.Result
 import ru.dimsuz.vanilla.Validator
+import ru.dimsuz.vanilla.satisfiesAnyOf
 
 class BuiltInValidatorTest {
   @Test
@@ -325,5 +326,54 @@ class BuiltInValidatorTest {
 
     assertThat(result)
       .isEqualTo(Result.Ok(emptyList<String>()))
+  }
+
+  // otherwise some kind of "combiner" function would be needed to combine
+  // all the results
+  @Test
+  fun anyOfKeepsSourceValueIgnoringOutputOfIndividualValidators() {
+    val validator = satisfiesAnyOf<String?, String>(
+      listOf(
+        Validator { Result.Ok("hello") },
+        Validator { Result.Ok("world") },
+      )
+    )
+
+    val result = validator.validate("33")
+
+    assertThat(result)
+      .isEqualTo(Result.Ok("33"))
+  }
+
+  @Test
+  fun anyOfSuccessIfSecondOk() {
+    val validator = satisfiesAnyOf<String?, String>(
+      listOf(
+        Validator { Result.Error("error") },
+        Validator { Result.Ok("hello") },
+        Validator { Result.Error("error") },
+      )
+    )
+
+    val result = validator.validate("fine")
+
+    assertThat(result)
+      .isEqualTo(Result.Ok("fine"))
+  }
+
+  @Test
+  fun anyOfErrorIfAllError() {
+    val validator = satisfiesAnyOf<String?, String>(
+      listOf(
+        Validator { Result.Error("error") },
+        Validator { Result.Error("error2") },
+        Validator { Result.Error("error3") },
+      )
+    )
+
+    val result = validator.validate("final")
+
+    assertThat(result)
+      .isEqualTo(Result.Error("error", listOf("error2", "error3")))
   }
 }
