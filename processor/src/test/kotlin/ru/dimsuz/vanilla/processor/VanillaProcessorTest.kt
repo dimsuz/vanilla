@@ -3,6 +3,7 @@ package ru.dimsuz.vanilla.processor
 import com.google.common.truth.Truth.assertThat
 import com.squareup.kotlinpoet.metadata.ImmutableKmType
 import com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview
+import com.squareup.kotlinpoet.metadata.isInternal
 import com.squareup.kotlinpoet.metadata.isNullable
 import com.squareup.kotlinpoet.metadata.isPrivate
 import com.squareup.kotlinpoet.metadata.toImmutableKmClass
@@ -357,10 +358,57 @@ class VanillaProcessorTest {
     assertThat(secondParam.type?.classifier).isEqualTo(KmClassifier.Class("kotlin/collections/Map"))
   }
 
+  @Test
+  fun hasInternalModifierIfInternalSource() {
+    val result = compile(
+      kotlin(
+        "source.kt",
+        """
+        import ru.dimsuz.vanilla.annotation.ValidatedAs
+        import ru.dimsuz.vanilla.annotation.ValidatedName
+
+        @ValidatedAs(Validated::class)
+        internal data class Draft(val address: Int?)
+        data class Validated(val address: Int, val cityId: String, val titleMapping: Map<Int, String>)
+        """.trimIndent()
+      )
+    )
+
+    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
+
+    val builderClass = result.classLoader.loadClass("DraftValidatorBuilder").toImmutableKmClass()
+    assertThat(builderClass.isInternal)
+      .isTrue()
+  }
+
+  @Test
+  fun hasInternalModifierIfInternalTarget() {
+    val result = compile(
+      kotlin(
+        "source.kt",
+        """
+        import ru.dimsuz.vanilla.annotation.ValidatedAs
+        import ru.dimsuz.vanilla.annotation.ValidatedName
+
+        @ValidatedAs(Validated::class)
+        data class Draft(val address: Int?)
+        internal data class Validated(val address: Int, val cityId: String, val titleMapping: Map<Int, String>)
+        """.trimIndent()
+      )
+    )
+
+    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
+
+    val builderClass = result.classLoader.loadClass("DraftValidatorBuilder").toImmutableKmClass()
+    assertThat(builderClass.isInternal)
+      .isTrue()
+  }
+
   // TODO gives an error if source and target have properties but no match can be found
   // TODO generates property validator signature which has target field type if it differs from source
   // TODO generates properly if source/target classes are inside another class
   // TODO generates properly if source/target classes are inside another interface
+  // TODO gives an error if source or target is private,must be public/internal
 
   private fun assertIsValidatorType(type: ImmutableKmType?) {
     assertThat(type?.classifier).isEqualTo(KmClassifier.Class("ru/dimsuz/vanilla/Validator"))

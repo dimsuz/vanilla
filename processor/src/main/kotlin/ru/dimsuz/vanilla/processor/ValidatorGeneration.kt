@@ -66,12 +66,16 @@ private fun extractSourceClassName(analysisResult: SourceAnalysisResult): ClassN
 
 private fun createBuilderTypeSpec(analysisResult: SourceAnalysisResult): TypeSpec {
   val className = ClassName("", "${analysisResult.models.sourceTypeSpec.name}ValidatorBuilder")
+  val classModifiers = if (analysisResult.models.sourceTypeSpec.modifiers.contains(KModifier.INTERNAL) ||
+    analysisResult.models.targetTypeSpec.modifiers.contains(KModifier.INTERNAL)
+  ) listOf(KModifier.INTERNAL) else emptyList()
   return TypeSpec.classBuilder(className)
     .addTypeVariable(TypeVariableName("E"))
     .addProperties(createBuilderProperties(analysisResult))
     .addFunctions(createBuilderRuleFunctions(className, analysisResult))
     .addFunctions(createBuildFunction(analysisResult))
     .addType(createBuilderCompanionObject(analysisResult))
+    .addModifiers(classModifiers)
     .build()
 }
 
