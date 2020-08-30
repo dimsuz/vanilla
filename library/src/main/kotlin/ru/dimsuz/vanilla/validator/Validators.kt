@@ -11,6 +11,16 @@ fun <T : Any, E> isNotNull(error: E): Validator<T?, T, E> {
   return Validator { input -> if (input != null) Result.Ok(input) else Result.Error(error) }
 }
 
+fun <I : Any, E> isNullOr(validator: Validator<I, I, E>): Validator<I?, I?, E> {
+  return Validator { input ->
+    if (input == null) {
+      Result.Ok(input)
+    } else {
+      validator.validate(input)
+    }
+  }
+}
+
 fun <E> isNotEmpty(error: E): Validator<String, String, E> {
   return Validator { input ->
     if (input.isNotEmpty()) Result.Ok(input) else Result.Error(error)

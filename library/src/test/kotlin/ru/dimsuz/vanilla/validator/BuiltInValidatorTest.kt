@@ -376,4 +376,34 @@ class BuiltInValidatorTest {
     assertThat(result)
       .isEqualTo(Result.Error("error", listOf("error2", "error3")))
   }
+
+  @Test
+  fun isNullOrDoesNotProduceAnErrorOnNull() {
+    val validator = isNullOr(hasLengthGreaterThan(3) { "error '$it'" })
+
+    val result = validator.validate(null)
+
+    assertThat(result)
+      .isEqualTo(Result.Ok(null))
+  }
+
+  @Test
+  fun isNullOrProducesAnErrorOnFailingNonNull() {
+    val validator = isNullOr(hasLengthGreaterThan(3) { "error '$it'" })
+
+    val result = validator.validate("he")
+
+    assertThat(result)
+      .isEqualTo(Result.Error("error 'he'"))
+  }
+
+  @Test
+  fun isNullOrDoesNotProduceAnErrorOnCorrectNonNull() {
+    val validator = isNullOr(hasLengthGreaterThan(3) { "error '$it'" })
+
+    val result = validator.validate("hello")
+
+    assertThat(result)
+      .isEqualTo(Result.Ok("hello"))
+  }
 }
