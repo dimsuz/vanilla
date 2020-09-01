@@ -306,7 +306,7 @@ class BuiltInValidatorTest {
       Validator<Int, String, String> { input ->
         when (input) {
           88 -> Result.Ok(input.toString())
-          77 -> Result.Error("error '$input.1'", listOf("error '$input.2'"))
+          77 -> Result.Error(listOf("error '$input.1'", "error '$input.2'"))
           else -> Result.Error("error '$input'")
         }
       }
@@ -315,7 +315,7 @@ class BuiltInValidatorTest {
     val result = validator.validate(setOf(33, 88, 77, 55))
 
     assertThat(result)
-      .isEqualTo(Result.Error("error '33'", listOf("error '77.1'", "error '77.2'", "error '55'")))
+      .isEqualTo(Result.Error(listOf("error '33'", "error '77.1'", "error '77.2'", "error '55'")))
   }
 
   @Test
@@ -374,7 +374,7 @@ class BuiltInValidatorTest {
     val result = validator.validate("final")
 
     assertThat(result)
-      .isEqualTo(Result.Error("error", listOf("error2", "error3")))
+      .isEqualTo(Result.Error(listOf("error", "error2", "error3")))
   }
 
   @Test

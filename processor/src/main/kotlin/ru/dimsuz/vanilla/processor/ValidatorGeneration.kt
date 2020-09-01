@@ -42,8 +42,7 @@ private fun createValidationExecStatements(
         sProp
       )
       .beginControlFlow("is %T ->", Result.Error::class.asTypeName())
-      .addStatement("%N.add(result.first)", errorsVariableName)
-      .addStatement("if (result.rest != null) %N.addAll(result.rest!!)", errorsVariableName)
+      .addStatement("%N.addAll(result.errors)", errorsVariableName)
       .addStatement("null")
       .endControlFlow()
       .addStatement("is %T -> result.value", Result.Ok::class.asTypeName())
@@ -193,7 +192,7 @@ private fun createValidateFunctionBody(analysisResult: SourceAnalysisResult): Co
     .endControlFlow() // END FLOW_B
     .beginControlFlow("else") // BEGIN FLOW_C
     .addStatement(
-      "%1T(%2N.first(), if (%2N.size > 1) %2N.drop(1) else null)",
+      "%T(%N)",
       Result.Error::class.asTypeName(),
       errorsVariableName
     )

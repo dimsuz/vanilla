@@ -120,8 +120,8 @@ fun <I : Iterable<IE>, IE, O, E> eachElement(
     if (results.all { it is Result.Ok }) {
       Result.Ok(results.map { (it as Result.Ok).value }.toList())
     } else {
-      val errors = results.filterIsInstance<Result.Error<E>>().flatMap { sequenceOf(it.first) + it.rest.orEmpty() }
-      Result.Error(errors.first(), errors.drop(1).toList().takeIf { it.isNotEmpty() })
+      val errors = results.filterIsInstance<Result.Error<E>>().flatMap { it.errors }
+      Result.Error(errors.toList())
     }
   }
 }

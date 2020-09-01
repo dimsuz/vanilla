@@ -27,11 +27,10 @@ fun <I, E> satisfiesAnyOf(validators: Iterable<Validator<I, I, E>>): Validator<I
       when (val result = v.validate(input)) {
         is Result.Ok -> return@Validator Result.Ok(input)
         is Result.Error -> {
-          errors.add(result.first)
-          errors.addAll(result.rest.orEmpty())
+          errors.addAll(result.errors)
         }
       }
     }
-    Result.Error(errors.first(), if (errors.size > 1) errors.drop(1) else null)
+    Result.Error(errors)
   }
 }

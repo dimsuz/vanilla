@@ -24,7 +24,7 @@ class DummyValidator {
       require(errors.size > 1) { "use other fail overload for 1 error" }
       return Validator {
         action?.invoke()
-        Result.Error(errors.first(), errors.drop(1))
+        Result.Error(errors)
       }
     }
   }

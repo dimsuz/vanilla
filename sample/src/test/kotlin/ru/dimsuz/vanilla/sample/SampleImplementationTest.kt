@@ -113,9 +113,8 @@ class SampleImplementationTest {
     assertThat(result)
       .isEqualTo(
         Result.Error(
-          "lastName error",
           listOf(
-            "age error 1", "age error 2", "addr error", "phoneNumbers error",
+            "lastName error", "age error 1", "age error 2", "addr error", "phoneNumbers error",
             "friends error 1", "friends error 2"
           )
         )
@@ -209,7 +208,7 @@ class SampleImplementationTest {
     assertThat(trace)
       .containsExactly("first", "second")
     assertThat(result)
-      .isEqualTo(Result.Error("error1", listOf("error2")))
+      .isEqualTo(Result.Error(listOf("error1", "error2")))
   }
 
   @Test
@@ -250,7 +249,7 @@ class SampleImplementationTest {
       .validate(draft)
 
     assertThat(result)
-      .isEqualTo(Result.Error("error1", listOf("error2", "some age error")))
+      .isEqualTo(Result.Error(listOf("error1", "error2", "some age error")))
   }
 
   @Test
