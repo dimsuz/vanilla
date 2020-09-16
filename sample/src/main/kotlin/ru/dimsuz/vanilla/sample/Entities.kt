@@ -23,7 +23,8 @@ data class AddressDraft(
   val city: String?,
   val street: String?,
   val house: Int?,
-  val extraData: Map<String, Int>
+  val extraData: Map<String, Int>,
+  val poBox: String?
 )
 
 @ValidatedAs(PhoneNumber::class)
@@ -38,7 +39,8 @@ data class Address(
   val city: String,
   val street: String,
   val house: Int,
-  val districtNameId: String?
+  val districtNameId: String?,
+  val poBox: String?
 )
 
 data class PhoneNumber(

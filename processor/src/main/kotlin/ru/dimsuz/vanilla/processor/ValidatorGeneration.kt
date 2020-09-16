@@ -169,12 +169,18 @@ private fun createValidateFunction(analysisResult: SourceAnalysisResult): FunSpe
     .build()
 }
 
+private fun SourceAnalysisResult.targetPropertyIsNullable(targetPropertyName: String): Boolean {
+  return this.models.targetTypeSpec.propertySpecs.first { it.name == targetPropertyName }.type.isNullable
+}
+
 private fun createValidateFunctionBody(analysisResult: SourceAnalysisResult): CodeBlock {
   val targetClassName = extractTargetClassName(analysisResult)
   val errorsVariableName = "errors"
   val validationStatements = createValidationExecStatements(analysisResult, errorsVariableName)
   val unmappedPropertyNames = analysisResult.unmappedTargetProperties.map { it.name }
-  val validatorParametersTemplate = repeatTemplate("%N = %N!!", analysisResult.mapping.size)
+  val validatorParametersTemplate = analysisResult.mapping.values.joinToString { tPropName ->
+    if (analysisResult.targetPropertyIsNullable(tPropName)) "%N = %N" else "%N = %N!!"
+  }
   val unmappedParametersTemplate = if (unmappedPropertyNames.isNotEmpty()) {
     repeatTemplate("%N = %N", unmappedPropertyNames.size, prefix = ", ")
   } else ""
@@ -259,7 +265,7 @@ private fun createMissingFieldRulesProperty(sourceProperties: Set<String>): Prop
  * ```
  */
 private fun repeatTemplate(template: String, count: Int, prefix: String = "", suffix: String = ""): String {
-  return generateSequence { template }.take(count).joinToString(prefix = prefix.orEmpty(), postfix = suffix.orEmpty())
+  return generateSequence { template }.take(count).joinToString(prefix = prefix, postfix = suffix)
 }
 
 private val VALIDATOR_CLASS_NAME = ClassName("ru.dimsuz.vanilla", "Validator")

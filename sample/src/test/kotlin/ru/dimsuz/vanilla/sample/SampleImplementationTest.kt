@@ -5,7 +5,10 @@ import org.junit.Test
 import ru.dimsuz.vanilla.Result
 import ru.dimsuz.vanilla.compose
 import ru.dimsuz.vanilla.sample.dummy.DummyValidator
+import ru.dimsuz.vanilla.validator.hasLengthLessThan
 import ru.dimsuz.vanilla.validator.isNotNull
+import ru.dimsuz.vanilla.validator.isNullOr
+import ru.dimsuz.vanilla.validator.ok
 
 class SampleImplementationTest {
   @Test
@@ -56,13 +59,13 @@ class SampleImplementationTest {
       firstName = "Fiodor",
       lastName = "Dostoyevsky",
       age = "33",
-      addr = AddressDraft(city = "Moscow", street = "Tverskaya", house = 3, extraData = emptyMap()),
+      addr = AddressDraft(city = "Moscow", street = "Tverskaya", house = 3, extraData = emptyMap(), poBox = null),
       phoneNumbers = listOf(PhoneNumberDraft(PhoneType.HomePhone, "334455")),
       friends = emptyMap(),
       extraUnused1 = 3,
       extraUnused2 = "none"
     )
-    val expectedAddress = Address(city = "Moscow", street = "Tverskaya", house = 3, districtNameId = null)
+    val expectedAddress = Address(city = "Moscow", street = "Tverskaya", house = 3, districtNameId = null, poBox = null)
     val expectedPhoneNumbers = listOf(PhoneNumber(PhoneType.HomePhone, "334455"))
     val expectedPerson = Person(
       firstName = "Fiodor",
@@ -127,13 +130,13 @@ class SampleImplementationTest {
       firstName = "Fiodor",
       lastName = "Dostoyevsky",
       age = "33",
-      addr = AddressDraft(city = "Moscow", street = "Tverskaya", house = 3, extraData = emptyMap()),
+      addr = AddressDraft(city = "Moscow", street = "Tverskaya", house = 3, extraData = emptyMap(), poBox = null),
       phoneNumbers = listOf(PhoneNumberDraft(PhoneType.HomePhone, "334455")),
       friends = emptyMap(),
       extraUnused1 = 3,
       extraUnused2 = "none"
     )
-    val expectedAddress = Address(city = "Moscow", street = "Tverskaya", house = 3, districtNameId = null)
+    val expectedAddress = Address(city = "Moscow", street = "Tverskaya", house = 3, districtNameId = null, poBox = null)
     val expectedPhoneNumbers = listOf(PhoneNumber(PhoneType.HomePhone, "334455"))
     val expectedPerson = Person(
       firstName = "Fiodor3",
@@ -174,13 +177,13 @@ class SampleImplementationTest {
       firstName = "Fiodor",
       lastName = "Dostoyevsky",
       age = "33",
-      addr = AddressDraft(city = "Moscow", street = "Tverskaya", house = 3, extraData = emptyMap()),
+      addr = AddressDraft(city = "Moscow", street = "Tverskaya", house = 3, extraData = emptyMap(), poBox = null),
       phoneNumbers = listOf(PhoneNumberDraft(PhoneType.HomePhone, "334455")),
       friends = emptyMap(),
       extraUnused1 = 3,
       extraUnused2 = "none"
     )
-    val address = Address(city = "Moscow", street = "Tverskaya", house = 3, districtNameId = null)
+    val address = Address(city = "Moscow", street = "Tverskaya", house = 3, districtNameId = null, poBox = null)
 
     val trace = mutableListOf<String>()
 
@@ -217,13 +220,13 @@ class SampleImplementationTest {
       firstName = "Fiodor",
       lastName = "Dostoyevsky",
       age = "33",
-      addr = AddressDraft(city = "Moscow", street = "Tverskaya", house = 3, extraData = emptyMap()),
+      addr = AddressDraft(city = "Moscow", street = "Tverskaya", house = 3, extraData = emptyMap(), poBox = null),
       phoneNumbers = listOf(PhoneNumberDraft(PhoneType.HomePhone, "334455")),
       friends = emptyMap(),
       extraUnused1 = 3,
       extraUnused2 = "none"
     )
-    val address = Address(city = "Moscow", street = "Tverskaya", house = 3, districtNameId = null)
+    val address = Address(city = "Moscow", street = "Tverskaya", house = 3, districtNameId = null, poBox = null)
 
     val trace = mutableListOf<String>()
 
@@ -258,13 +261,30 @@ class SampleImplementationTest {
       .city(isNotNull("null city"))
       .house(isNotNull("null house"))
       .street(isNotNull("null street"))
+      .poBox(isNullOr(ok()))
       .buildWith("hubba bubba")
 
-    val result = validator.validate(AddressDraft("fjfj", "fjfj", 33, emptyMap()))
+    val result = validator.validate(AddressDraft("fjfj", "fjfj", 33, emptyMap(), poBox = "33"))
     assertThat(result)
       .isInstanceOf(Result.Ok::class.java)
     assertThat((result as Result.Ok).value.districtNameId)
       .isEqualTo("hubba bubba")
+  }
+
+  @Test
+  fun `given a model with nullable field, correctly preserves it if validator leaves it null`() {
+    val validator = AddressDraftValidatorBuilder<String>()
+      .city(isNotNull("null city"))
+      .house(isNotNull("null house"))
+      .street(isNotNull("null street"))
+      .poBox(isNullOr(hasLengthLessThan(333) { "error $it" }))
+      .buildWith("hubba bubba")
+
+    val result = validator.validate(AddressDraft("fjfj", "fjfj", 33, emptyMap(), poBox = null))
+    assertThat(result)
+      .isInstanceOf(Result.Ok::class.java)
+    assertThat((result as Result.Ok).value.poBox)
+      .isNull()
   }
 }
 
@@ -295,6 +315,7 @@ private fun createAddressModel(): Address {
     city = "Kaliningrad",
     street = "Epronovskaya",
     house = 33,
-    districtNameId = "334"
+    districtNameId = "334",
+    poBox = null
   )
 }
