@@ -23,6 +23,12 @@ fun findValidationModelPairs(roundEnv: RoundEnvironment): Either<Error, List<Mod
   return roundEnv.getElementsAnnotatedWith(ValidatedAs::class.java).map { element ->
     val sourceElement = element as? TypeElement
     val targetElement = element.extractTargetModelClass()
+    if (sourceElement?.typeParameters?.isNotEmpty() == true) {
+      return Left("Source class \"${sourceElement.simpleName}\" has a generic parameter. This is not supported yet")
+    }
+    if (targetElement?.typeParameters?.isNotEmpty() == true) {
+      return Left("Target class \"${targetElement.simpleName}\" has a generic parameter. This is not supported yet")
+    }
     val sourceTypeSpec = sourceElement?.toImmutableKmClass()?.toTypeSpec(null)
       .toRightOr("internal error: failed to read source model information")
     val targetTypeSpec = targetElement?.toImmutableKmClass()?.toTypeSpec(null)

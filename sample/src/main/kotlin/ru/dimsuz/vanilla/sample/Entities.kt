@@ -15,7 +15,7 @@ data class PersonDraft(
   @DependsOn(["age, addr"])
   val friends: Map<PersonDraft, AddressDraft>?,
   val extraUnused1: Int,
-  val extraUnused2: String
+  val extraUnused2: String?
 )
 
 @ValidatedAs(Address::class)

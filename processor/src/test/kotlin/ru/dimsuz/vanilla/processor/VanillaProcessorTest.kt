@@ -27,10 +27,32 @@ class VanillaProcessorTest {
         "source.kt",
         """
         import ru.dimsuz.vanilla.annotation.ValidatedAs
-        
+
         @ValidatedAs(Validated::class)
         class Draft
         class Validated(val name: String)
+        """.trimIndent()
+      )
+    )
+
+    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
+    assertThat(result.messages).contains(
+      "error: failed to find matching properties. " +
+        "Consider adding @ValidatedName annotation to properties of \"Draft\" class"
+    )
+  }
+
+  @Test
+  fun sourceTargetMustHaveMatchingProperties() {
+    val result = compile(
+      kotlin(
+        "source.kt",
+        """
+        import ru.dimsuz.vanilla.annotation.ValidatedAs
+        
+        @ValidatedAs(Validated::class)
+        class Draft(val property: Int, val lastName: String)
+        class Validated(val name: String, val house: Int)
         """.trimIndent()
       )
     )
@@ -59,7 +81,7 @@ class VanillaProcessorTest {
 
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages)
-      .contains("Source class \"Draft\" has a generic parameter. This is not supported yet.")
+      .contains("Source class \"Draft\" has a generic parameter. This is not supported yet")
   }
 
   @Test
@@ -79,7 +101,7 @@ class VanillaProcessorTest {
 
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages)
-      .contains("Target class \"Validated\" has a generic parameter. This is not supported yet.")
+      .contains("Target class \"Validated\" has a generic parameter. This is not supported yet")
   }
 
   @Test
@@ -404,7 +426,6 @@ class VanillaProcessorTest {
       .isTrue()
   }
 
-  // TODO gives an error if source and target have properties but no match can be found
   // TODO generates property validator signature which has target field type if it differs from source
   // TODO generates properly if source/target classes are inside another class
   // TODO generates properly if source/target classes are inside another interface
