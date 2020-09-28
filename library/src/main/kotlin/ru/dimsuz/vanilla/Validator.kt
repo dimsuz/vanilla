@@ -5,7 +5,7 @@ inline class Validator<I, O, E>(val validate: (I) -> Result<O, E>)
 sealed class Result<out T, out E> {
   data class Ok<out T>(val value: T) : Result<T, Nothing>()
   data class Error<out E>(val errors: List<E>) : Result<Nothing, E>() {
-    constructor(error: E): this(listOf(error))
+    constructor(error: E) : this(listOf(error))
   }
 }
 

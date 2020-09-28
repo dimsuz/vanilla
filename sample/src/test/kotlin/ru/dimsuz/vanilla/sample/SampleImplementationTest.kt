@@ -277,7 +277,7 @@ class SampleImplementationTest {
       .city(isNotNull("null city"))
       .house(isNotNull("null house"))
       .street(isNotNull("null street"))
-      .poBox(isNullOr(hasLengthLessThan(333) { "error $it" }))
+      .poBox(isNullOr(hasLengthLessThan(333, "error")))
       .buildWith("hubba bubba")
 
     val result = validator.validate(AddressDraft("fjfj", "fjfj", 33, emptyMap(), poBox = null))
