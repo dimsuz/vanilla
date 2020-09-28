@@ -7,6 +7,8 @@ fun <I, E> ok(): Validator<I, I, E> {
   return Validator { Result.Ok(it) }
 }
 
+fun <I, E> keep(): Validator<I, I, E> = ok()
+
 fun <T : Any, E> isNotNull(error: E): Validator<T?, T, E> {
   return Validator { input -> if (input != null) Result.Ok(input) else Result.Error(error) }
 }
@@ -73,6 +75,22 @@ fun <E> hasLengthInRange(
   require(min <= max) { "invalid range ($min..$max), expected min <= max" }
   return Validator { input ->
     if (input.length in (min..max)) Result.Ok(input) else Result.Error(error)
+  }
+}
+
+fun <E> matches(
+  pattern: String,
+  error: E
+): Validator<String, String, E> {
+  return matches(Regex(pattern), error)
+}
+
+fun <E> matches(
+  regex: Regex,
+  error: E
+): Validator<String, String, E> {
+  return Validator { input ->
+    if (input.matches(regex)) Result.Ok(input) else Result.Error(error)
   }
 }
 
