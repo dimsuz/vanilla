@@ -4,6 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 import ru.dimsuz.vanilla.Result
 import ru.dimsuz.vanilla.Validator
+import ru.dimsuz.vanilla.satisfiesAllOf
 import ru.dimsuz.vanilla.satisfiesAnyOf
 
 class BuiltInValidatorTest {
@@ -372,6 +373,87 @@ class BuiltInValidatorTest {
 
     assertThat(result)
       .isEqualTo(Result.Error(listOf("error", "error2", "error3")))
+  }
+
+  @Test
+  fun anyOfRequiresNonEmptyList() {
+    var exception: Throwable? = null
+    try {
+      satisfiesAnyOf<String?, String>(emptyList())
+    } catch (e: Throwable) {
+      exception = e
+    }
+
+    assertThat(exception)
+      .isNotNull()
+    assertThat(exception)
+      .hasMessageThat()
+      .contains("validator list is empty")
+  }
+
+  // otherwise some kind of "combiner" function would be needed to combine
+  // all the results
+  @Test
+  fun allOfKeepsSourceValueIgnoringOutputOfIndividualValidators() {
+    val validator = satisfiesAllOf<String?, String>(
+      listOf(
+        Validator { Result.Ok("hello") },
+        Validator { Result.Ok("world") },
+      )
+    )
+
+    val result = validator.validate("33")
+
+    assertThat(result)
+      .isEqualTo(Result.Ok("33"))
+  }
+
+  @Test
+  fun allOfFailsIfAnyFails() {
+    val validator = satisfiesAllOf<String?, String>(
+      listOf(
+        Validator { Result.Ok("world") },
+        Validator { Result.Ok("hello") },
+        Validator { Result.Error("error") },
+      )
+    )
+
+    val result = validator.validate("fine")
+
+    assertThat(result)
+      .isEqualTo(Result.Error("error"))
+  }
+
+  @Test
+  fun allOfErrorIfAllErrorAccumulatesAllErrors() {
+    val validator = satisfiesAllOf<String?, String>(
+      listOf(
+        Validator { Result.Error("error") },
+        Validator { Result.Error("error2") },
+        Validator { Result.Error("error3") },
+      )
+    )
+
+    val result = validator.validate("final")
+
+    assertThat(result)
+      .isEqualTo(Result.Error(listOf("error", "error2", "error3")))
+  }
+
+  @Test
+  fun allOfRequiresNonEmptyList() {
+    var exception: Throwable? = null
+    try {
+      satisfiesAllOf<String?, String>(emptyList())
+    } catch (e: Throwable) {
+      exception = e
+    }
+
+    assertThat(exception)
+      .isNotNull()
+    assertThat(exception)
+      .hasMessageThat()
+      .contains("validator list is empty")
   }
 
   @Test
