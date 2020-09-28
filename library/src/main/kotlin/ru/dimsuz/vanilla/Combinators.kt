@@ -20,7 +20,8 @@ fun <I, O1, O2, E> Validator<I, O1, E>.map(mapper: (O1) -> O2): Validator<I, O2,
   return Validator { input -> this.validate(input).map(mapper) }
 }
 
-fun <I, E> satisfiesAnyOf(validators: Iterable<Validator<I, I, E>>): Validator<I, I, E> {
+// TODO when documenting, mention that outputs are ignored, only Ok/Error matters
+fun <I, E> satisfiesAnyOf(validators: Iterable<Validator<I, *, E>>): Validator<I, I, E> {
   return Validator { input ->
     val errors = mutableListOf<E>()
     for (v in validators) {
