@@ -6,6 +6,20 @@ import ru.dimsuz.vanilla.Result
 import ru.dimsuz.vanilla.Validator
 import ru.dimsuz.vanilla.satisfiesAllOf
 import ru.dimsuz.vanilla.satisfiesAnyOf
+import ru.dimsuz.vanilla.validator.Validators.eachElement
+import ru.dimsuz.vanilla.validator.Validators.hasLengthGreaterThan
+import ru.dimsuz.vanilla.validator.Validators.hasLengthGreaterThanOrEqualTo
+import ru.dimsuz.vanilla.validator.Validators.hasLengthInRange
+import ru.dimsuz.vanilla.validator.Validators.hasLengthLessThan
+import ru.dimsuz.vanilla.validator.Validators.hasLengthLessThanOrEqualTo
+import ru.dimsuz.vanilla.validator.Validators.isGreaterThan
+import ru.dimsuz.vanilla.validator.Validators.isGreaterThanOrEqual
+import ru.dimsuz.vanilla.validator.Validators.isLessThan
+import ru.dimsuz.vanilla.validator.Validators.isLessThanOrEqual
+import ru.dimsuz.vanilla.validator.Validators.isNotBlank
+import ru.dimsuz.vanilla.validator.Validators.isNotEmpty
+import ru.dimsuz.vanilla.validator.Validators.isNotNull
+import ru.dimsuz.vanilla.validator.Validators.isNullOr
 
 class BuiltInValidatorTest {
   @Test

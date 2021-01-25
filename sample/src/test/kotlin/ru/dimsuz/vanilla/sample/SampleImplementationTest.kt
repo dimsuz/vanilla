@@ -5,10 +5,10 @@ import org.junit.Test
 import ru.dimsuz.vanilla.Result
 import ru.dimsuz.vanilla.compose
 import ru.dimsuz.vanilla.sample.dummy.DummyValidator
-import ru.dimsuz.vanilla.validator.hasLengthLessThan
-import ru.dimsuz.vanilla.validator.isNotNull
-import ru.dimsuz.vanilla.validator.isNullOr
-import ru.dimsuz.vanilla.validator.ok
+import ru.dimsuz.vanilla.validator.Validators.hasLengthLessThan
+import ru.dimsuz.vanilla.validator.Validators.isNotNull
+import ru.dimsuz.vanilla.validator.Validators.isNullOr
+import ru.dimsuz.vanilla.validator.Validators.ok
 
 class SampleImplementationTest {
   @Test

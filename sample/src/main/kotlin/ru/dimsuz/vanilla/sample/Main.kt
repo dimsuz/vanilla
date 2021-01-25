@@ -3,7 +3,7 @@ package ru.dimsuz.vanilla.sample
 import ru.dimsuz.vanilla.Result
 import ru.dimsuz.vanilla.Validator
 import ru.dimsuz.vanilla.compose
-import ru.dimsuz.vanilla.validator.isNotNull
+import ru.dimsuz.vanilla.validator.Validators.isNotNull
 
 fun main() {
   val validator = PersonDraftValidatorBuilder<String>()

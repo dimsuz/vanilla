@@ -1,7 +1,5 @@
 package ru.dimsuz.vanilla
 
-import java.util.ArrayList
-
 fun <I, O, E> compose(
   body: ValidatorComposer<I, E>.() -> StartedValidatorComposer<I, O, E>,
 ): Validator<I, O, E> {
