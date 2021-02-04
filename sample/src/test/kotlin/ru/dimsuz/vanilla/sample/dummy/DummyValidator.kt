@@ -1,6 +1,7 @@
 package ru.dimsuz.vanilla.sample.dummy
 
-import ru.dimsuz.vanilla.Result
+import com.github.michaelbull.result.Err
+import com.github.michaelbull.result.Ok
 import ru.dimsuz.vanilla.Validator
 
 class DummyValidator {
@@ -9,14 +10,14 @@ class DummyValidator {
     fun <I, O> success(output: O, action: (() -> Unit)? = null): Validator<I, O, String> {
       return Validator {
         action?.invoke()
-        Result.Ok(output)
+        Ok(output)
       }
     }
 
     fun <I, O> fail(error: String, action: (() -> Unit)? = null): Validator<I, O, String> {
       return Validator {
         action?.invoke()
-        Result.Error(error)
+        Err(listOf(error))
       }
     }
 
@@ -24,7 +25,7 @@ class DummyValidator {
       require(errors.size > 1) { "use other fail overload for 1 error" }
       return Validator {
         action?.invoke()
-        Result.Error(errors)
+        Err(errors)
       }
     }
   }

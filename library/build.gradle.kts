@@ -1,6 +1,7 @@
 dependencies {
   implementation(kotlin("stdlib-jdk8"))
   api(project(":annotations"))
+  api("com.michael-bull.kotlin-result:kotlin-result:1.1.10")
 
   testImplementation("com.google.truth:truth:1.0.1")
 }

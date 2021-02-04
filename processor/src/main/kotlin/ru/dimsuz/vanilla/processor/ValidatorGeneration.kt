@@ -1,5 +1,7 @@
 package ru.dimsuz.vanilla.processor
 
+import com.github.michaelbull.result.Err
+import com.github.michaelbull.result.Ok
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
@@ -13,7 +15,6 @@ import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.asTypeName
-import ru.dimsuz.vanilla.Result
 import ru.dimsuz.vanilla.Validator
 import ru.dimsuz.vanilla.processor.either.Either
 import ru.dimsuz.vanilla.processor.extension.enclosingPackageName
@@ -41,11 +42,11 @@ private fun createValidationExecStatements(
         createRuleValidatorPropertyName(sProp),
         sProp
       )
-      .beginControlFlow("is %T ->", Result.Error::class.asTypeName())
-      .addStatement("%N.addAll(result.errors)", errorsVariableName)
+      .beginControlFlow("is %T ->", Err::class.asTypeName())
+      .addStatement("%N.addAll(result.error)", errorsVariableName)
       .addStatement("null")
       .endControlFlow()
-      .addStatement("is %T -> result.value", Result.Ok::class.asTypeName())
+      .addStatement("is %T -> result.value", Ok::class.asTypeName())
       .endControlFlow()
       .build()
   }
@@ -191,7 +192,7 @@ private fun createValidateFunctionBody(analysisResult: SourceAnalysisResult): Co
     .beginControlFlow("if (%N.isEmpty())", errorsVariableName) // BEGIN FLOW_B
     .addStatement(
       "%T(%T($validatorParametersTemplate$unmappedParametersTemplate))",
-      Result.Ok::class.asTypeName(),
+      Ok::class.asTypeName(),
       targetClassName,
       *(analysisResult.mapping.values + unmappedPropertyNames).flatMap { name -> listOf(name, name) }.toTypedArray()
     )
@@ -199,7 +200,7 @@ private fun createValidateFunctionBody(analysisResult: SourceAnalysisResult): Co
     .beginControlFlow("else") // BEGIN FLOW_C
     .addStatement(
       "%T(%N)",
-      Result.Error::class.asTypeName(),
+      Err::class.asTypeName(),
       errorsVariableName
     )
     .endControlFlow() // END FLOW_C
@@ -220,7 +221,7 @@ private fun createResultParameterizedByTargetName(analysisResult: SourceAnalysis
   return RESULT_CLASS_NAME
     .parameterizedBy(
       extractTargetClassName(analysisResult),
-      TypeVariableName("E")
+      ClassName("kotlin.collections", "List").parameterizedBy(TypeVariableName("E"))
     )
 }
 
@@ -269,6 +270,6 @@ private fun repeatTemplate(template: String, count: Int, prefix: String = "", su
 }
 
 private val VALIDATOR_CLASS_NAME = ClassName("ru.dimsuz.vanilla", "Validator")
-private val RESULT_CLASS_NAME = ClassName("ru.dimsuz.vanilla", "Result")
+private val RESULT_CLASS_NAME = ClassName("com.github.michaelbull.result", "Result")
 private const val CREATE_VALIDATE_FUNCTION_NAME = "createValidateFunction"
 private const val MISSING_RULES_PROPERTY_NAME = "missingFieldRules"

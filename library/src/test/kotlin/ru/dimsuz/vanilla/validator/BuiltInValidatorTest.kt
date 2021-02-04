@@ -1,8 +1,9 @@
 package ru.dimsuz.vanilla.validator
 
+import com.github.michaelbull.result.Err
+import com.github.michaelbull.result.Ok
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
-import ru.dimsuz.vanilla.Result
 import ru.dimsuz.vanilla.Validator
 import ru.dimsuz.vanilla.satisfiesAllOf
 import ru.dimsuz.vanilla.satisfiesAnyOf
@@ -28,7 +29,7 @@ class BuiltInValidatorTest {
     val result = validator.validate(null)
 
     assertThat(result)
-      .isInstanceOf(Result.Error::class.java)
+      .isInstanceOf(Err::class.java)
   }
 
   @Test
@@ -37,7 +38,7 @@ class BuiltInValidatorTest {
     val result = validator.validate(3)
 
     assertThat(result)
-      .isEqualTo(Result.Ok(3))
+      .isEqualTo(Ok(3))
   }
 
   @Test
@@ -46,7 +47,7 @@ class BuiltInValidatorTest {
     val result = validator.validate("")
 
     assertThat(result)
-      .isEqualTo(Result.Error("error"))
+      .isEqualTo(Err(listOf("error")))
   }
 
   @Test
@@ -55,7 +56,7 @@ class BuiltInValidatorTest {
     val result = validator.validate("  \t")
 
     assertThat(result)
-      .isEqualTo(Result.Error("error"))
+      .isEqualTo(Err(listOf("error")))
   }
 
   @Test
@@ -64,7 +65,7 @@ class BuiltInValidatorTest {
     val result = validator.validate("  hello")
 
     assertThat(result)
-      .isEqualTo(Result.Ok("  hello"))
+      .isEqualTo(Ok("  hello"))
   }
 
   @Test
@@ -73,7 +74,7 @@ class BuiltInValidatorTest {
     val result = validator.validate("")
 
     assertThat(result)
-      .isEqualTo(Result.Error("error"))
+      .isEqualTo(Err(listOf("error")))
   }
 
   @Test
@@ -82,7 +83,7 @@ class BuiltInValidatorTest {
     val result = validator.validate("  hello")
 
     assertThat(result)
-      .isEqualTo(Result.Ok("  hello"))
+      .isEqualTo(Ok("  hello"))
   }
 
   @Test
@@ -92,9 +93,9 @@ class BuiltInValidatorTest {
     val result2 = validator.validate("worldd")
 
     assertThat(result1)
-      .isEqualTo(Result.Ok("world"))
+      .isEqualTo(Ok("world"))
     assertThat(result2)
-      .isEqualTo(Result.Ok("worldd"))
+      .isEqualTo(Ok("worldd"))
   }
 
   @Test
@@ -103,7 +104,7 @@ class BuiltInValidatorTest {
     val result = validator.validate("worl")
 
     assertThat(result)
-      .isEqualTo(Result.Error("error"))
+      .isEqualTo(Err(listOf("error")))
   }
 
   @Test
@@ -114,11 +115,11 @@ class BuiltInValidatorTest {
     val result3 = validator.validate("")
 
     assertThat(result1)
-      .isEqualTo(Result.Ok("world"))
+      .isEqualTo(Ok("world"))
     assertThat(result2)
-      .isEqualTo(Result.Ok("worl"))
+      .isEqualTo(Ok("worl"))
     assertThat(result3)
-      .isEqualTo(Result.Ok(""))
+      .isEqualTo(Ok(""))
   }
 
   @Test
@@ -127,7 +128,7 @@ class BuiltInValidatorTest {
     val result = validator.validate("worldd")
 
     assertThat(result)
-      .isEqualTo(Result.Error("error"))
+      .isEqualTo(Err(listOf("error")))
   }
 
   @Test
@@ -151,7 +152,7 @@ class BuiltInValidatorTest {
     val result = validator.validate("h")
 
     assertThat(result)
-      .isEqualTo(Result.Error("error"))
+      .isEqualTo(Err(listOf("error")))
   }
 
   @Test
@@ -163,11 +164,11 @@ class BuiltInValidatorTest {
     val result3 = validator.validate("hell")
 
     assertThat(result1)
-      .isEqualTo(Result.Ok("he"))
+      .isEqualTo(Ok("he"))
     assertThat(result2)
-      .isEqualTo(Result.Ok("hel"))
+      .isEqualTo(Ok("hel"))
     assertThat(result3)
-      .isEqualTo(Result.Ok("hell"))
+      .isEqualTo(Ok("hell"))
   }
 
   @Test
@@ -177,9 +178,9 @@ class BuiltInValidatorTest {
     val result2 = validator.validate("1234567")
 
     assertThat(result1)
-      .isEqualTo(Result.Ok("123456"))
+      .isEqualTo(Ok("123456"))
     assertThat(result2)
-      .isEqualTo(Result.Ok("1234567"))
+      .isEqualTo(Ok("1234567"))
   }
 
   @Test
@@ -188,7 +189,7 @@ class BuiltInValidatorTest {
     val result = validator.validate("12345")
 
     assertThat(result)
-      .isEqualTo(Result.Error("error"))
+      .isEqualTo(Err(listOf("error")))
   }
 
   @Test
@@ -198,9 +199,9 @@ class BuiltInValidatorTest {
     val result2 = validator.validate("123")
 
     assertThat(result1)
-      .isEqualTo(Result.Ok("1234"))
+      .isEqualTo(Ok("1234"))
     assertThat(result2)
-      .isEqualTo(Result.Ok("123"))
+      .isEqualTo(Ok("123"))
   }
 
   @Test
@@ -209,7 +210,7 @@ class BuiltInValidatorTest {
     val result = validator.validate("12345")
 
     assertThat(result)
-      .isEqualTo(Result.Error("error"))
+      .isEqualTo(Err(listOf("error")))
   }
 
   @Test
@@ -218,7 +219,7 @@ class BuiltInValidatorTest {
     val result = validator.validate(4)
 
     assertThat(result)
-      .isEqualTo(Result.Ok(4L))
+      .isEqualTo(Ok(4L))
   }
 
   @Test
@@ -228,9 +229,9 @@ class BuiltInValidatorTest {
     val result2 = validator.validate(6)
 
     assertThat(result1)
-      .isEqualTo(Result.Error("error"))
+      .isEqualTo(Err(listOf("error")))
     assertThat(result2)
-      .isEqualTo(Result.Error("error"))
+      .isEqualTo(Err(listOf("error")))
   }
 
   @Test
@@ -240,9 +241,9 @@ class BuiltInValidatorTest {
     val result2 = validator.validate(4)
 
     assertThat(result1)
-      .isEqualTo(Result.Ok(5L))
+      .isEqualTo(Ok(5L))
     assertThat(result2)
-      .isEqualTo(Result.Ok(4L))
+      .isEqualTo(Ok(4L))
   }
 
   @Test
@@ -252,9 +253,9 @@ class BuiltInValidatorTest {
     val result2 = validator.validate(7)
 
     assertThat(result1)
-      .isEqualTo(Result.Error("error"))
+      .isEqualTo(Err(listOf("error")))
     assertThat(result2)
-      .isEqualTo(Result.Error("error"))
+      .isEqualTo(Err(listOf("error")))
   }
 
   @Test
@@ -263,7 +264,7 @@ class BuiltInValidatorTest {
     val result = validator.validate(6)
 
     assertThat(result)
-      .isEqualTo(Result.Ok(6L))
+      .isEqualTo(Ok(6L))
   }
 
   @Test
@@ -273,9 +274,9 @@ class BuiltInValidatorTest {
     val result2 = validator.validate(4)
 
     assertThat(result1)
-      .isEqualTo(Result.Error("error"))
+      .isEqualTo(Err(listOf("error")))
     assertThat(result2)
-      .isEqualTo(Result.Error("error"))
+      .isEqualTo(Err(listOf("error")))
   }
 
   @Test
@@ -285,9 +286,9 @@ class BuiltInValidatorTest {
     val result2 = validator.validate(6)
 
     assertThat(result1)
-      .isEqualTo(Result.Ok(5L))
+      .isEqualTo(Ok(5L))
     assertThat(result2)
-      .isEqualTo(Result.Ok(6L))
+      .isEqualTo(Ok(6L))
   }
 
   @Test
@@ -297,19 +298,19 @@ class BuiltInValidatorTest {
     val result2 = validator.validate(3)
 
     assertThat(result1)
-      .isEqualTo(Result.Error("error"))
+      .isEqualTo(Err(listOf("error")))
     assertThat(result2)
-      .isEqualTo(Result.Error("error"))
+      .isEqualTo(Err(listOf("error")))
   }
 
   @Test
   fun eachElementMapsOnSuccess() {
-    val validator = eachElement(Validator<Int, String, String> { input -> Result.Ok(input.toString()) })
+    val validator = eachElement(Validator<Int, String, String> { input -> Ok(input.toString()) })
 
     val result = validator.validate(setOf(33, 88))
 
     assertThat(result)
-      .isEqualTo(Result.Ok(listOf("33", "88")))
+      .isEqualTo(Ok(listOf("33", "88")))
   }
 
   @Test
@@ -317,9 +318,9 @@ class BuiltInValidatorTest {
     val validator = eachElement(
       Validator<Int, String, String> { input ->
         when (input) {
-          88 -> Result.Ok(input.toString())
-          77 -> Result.Error(listOf("error '$input.1'", "error '$input.2'"))
-          else -> Result.Error("error '$input'")
+          88 -> Ok(input.toString())
+          77 -> Err(listOf("error '$input.1'", "error '$input.2'"))
+          else -> Err(listOf("error '$input'"))
         }
       }
     )
@@ -327,17 +328,17 @@ class BuiltInValidatorTest {
     val result = validator.validate(setOf(33, 88, 77, 55))
 
     assertThat(result)
-      .isEqualTo(Result.Error(listOf("error '33'", "error '77.1'", "error '77.2'", "error '55'")))
+      .isEqualTo(Err(listOf("error '33'", "error '77.1'", "error '77.2'", "error '55'")))
   }
 
   @Test
   fun eachElementReturnsOkOnEmptyList() {
-    val validator = eachElement(Validator<Int, String, String> { input -> Result.Ok(input.toString()) })
+    val validator = eachElement(Validator<Int, String, String> { input -> Ok(input.toString()) })
 
     val result = validator.validate(emptyList())
 
     assertThat(result)
-      .isEqualTo(Result.Ok(emptyList<String>()))
+      .isEqualTo(Ok(emptyList<String>()))
   }
 
   // otherwise some kind of "combiner" function would be needed to combine
@@ -346,47 +347,47 @@ class BuiltInValidatorTest {
   fun anyOfKeepsSourceValueIgnoringOutputOfIndividualValidators() {
     val validator = satisfiesAnyOf<String?, String>(
       listOf(
-        Validator { Result.Ok("hello") },
-        Validator { Result.Ok("world") },
+        Validator { Ok("hello") },
+        Validator { Ok("world") },
       )
     )
 
     val result = validator.validate("33")
 
     assertThat(result)
-      .isEqualTo(Result.Ok("33"))
+      .isEqualTo(Ok("33"))
   }
 
   @Test
   fun anyOfSuccessIfSecondOk() {
     val validator = satisfiesAnyOf<String?, String>(
       listOf(
-        Validator { Result.Error("error") },
-        Validator { Result.Ok("hello") },
-        Validator { Result.Error("error") },
+        Validator { Err(listOf("error")) },
+        Validator { Ok("hello") },
+        Validator { Err(listOf("error")) },
       )
     )
 
     val result = validator.validate("fine")
 
     assertThat(result)
-      .isEqualTo(Result.Ok("fine"))
+      .isEqualTo(Ok("fine"))
   }
 
   @Test
   fun anyOfErrorIfAllError() {
     val validator = satisfiesAnyOf<String?, String>(
       listOf(
-        Validator { Result.Error("error") },
-        Validator { Result.Error("error2") },
-        Validator { Result.Error("error3") },
+        Validator { Err(listOf("error")) },
+        Validator { Err(listOf("error2")) },
+        Validator { Err(listOf("error3")) },
       )
     )
 
     val result = validator.validate("final")
 
     assertThat(result)
-      .isEqualTo(Result.Error(listOf("error", "error2", "error3")))
+      .isEqualTo(Err(listOf("error", "error2", "error3")))
   }
 
   @Test
@@ -411,47 +412,47 @@ class BuiltInValidatorTest {
   fun allOfKeepsSourceValueIgnoringOutputOfIndividualValidators() {
     val validator = satisfiesAllOf<String?, String>(
       listOf(
-        Validator { Result.Ok("hello") },
-        Validator { Result.Ok("world") },
+        Validator { Ok("hello") },
+        Validator { Ok("world") },
       )
     )
 
     val result = validator.validate("33")
 
     assertThat(result)
-      .isEqualTo(Result.Ok("33"))
+      .isEqualTo(Ok("33"))
   }
 
   @Test
   fun allOfFailsIfAnyFails() {
     val validator = satisfiesAllOf<String?, String>(
       listOf(
-        Validator { Result.Ok("world") },
-        Validator { Result.Ok("hello") },
-        Validator { Result.Error("error") },
+        Validator { Ok("world") },
+        Validator { Ok("hello") },
+        Validator { Err(listOf("error")) },
       )
     )
 
     val result = validator.validate("fine")
 
     assertThat(result)
-      .isEqualTo(Result.Error("error"))
+      .isEqualTo(Err(listOf("error")))
   }
 
   @Test
   fun allOfErrorIfAllErrorAccumulatesAllErrors() {
     val validator = satisfiesAllOf<String?, String>(
       listOf(
-        Validator { Result.Error("error") },
-        Validator { Result.Error("error2") },
-        Validator { Result.Error("error3") },
+        Validator { Err(listOf("error")) },
+        Validator { Err(listOf("error2")) },
+        Validator { Err(listOf("error3")) },
       )
     )
 
     val result = validator.validate("final")
 
     assertThat(result)
-      .isEqualTo(Result.Error(listOf("error", "error2", "error3")))
+      .isEqualTo(Err(listOf("error", "error2", "error3")))
   }
 
   @Test
@@ -477,7 +478,7 @@ class BuiltInValidatorTest {
     val result = validator.validate(null)
 
     assertThat(result)
-      .isEqualTo(Result.Ok(null))
+      .isEqualTo(Ok(null))
   }
 
   @Test
@@ -487,7 +488,7 @@ class BuiltInValidatorTest {
     val result = validator.validate("he")
 
     assertThat(result)
-      .isEqualTo(Result.Error("error"))
+      .isEqualTo(Err(listOf("error")))
   }
 
   @Test
@@ -497,6 +498,6 @@ class BuiltInValidatorTest {
     val result = validator.validate("hello")
 
     assertThat(result)
-      .isEqualTo(Result.Ok("hello"))
+      .isEqualTo(Ok("hello"))
   }
 }

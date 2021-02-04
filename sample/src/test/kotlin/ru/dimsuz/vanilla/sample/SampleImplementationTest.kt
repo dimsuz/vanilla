@@ -1,8 +1,9 @@
 package ru.dimsuz.vanilla.sample
 
+import com.github.michaelbull.result.Err
+import com.github.michaelbull.result.Ok
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
-import ru.dimsuz.vanilla.Result
 import ru.dimsuz.vanilla.compose
 import ru.dimsuz.vanilla.sample.dummy.DummyValidator
 import ru.dimsuz.vanilla.validator.Validators.hasLengthLessThan
@@ -87,7 +88,7 @@ class SampleImplementationTest {
       .validate(draft)
 
     assertThat(result)
-      .isEqualTo(Result.Ok(expectedPerson))
+      .isEqualTo(Ok(expectedPerson))
   }
 
   @Test
@@ -115,7 +116,7 @@ class SampleImplementationTest {
 
     assertThat(result)
       .isEqualTo(
-        Result.Error(
+        Err(
           listOf(
             "lastName error", "age error 1", "age error 2", "addr error", "phoneNumbers error",
             "friends error 1", "friends error 2"
@@ -168,7 +169,7 @@ class SampleImplementationTest {
     assertThat(trace)
       .containsExactly("first", "second", "third")
     assertThat(result)
-      .isEqualTo(Result.Ok(expectedPerson))
+      .isEqualTo(Ok(expectedPerson))
   }
 
   @Test
@@ -211,7 +212,7 @@ class SampleImplementationTest {
     assertThat(trace)
       .containsExactly("first", "second")
     assertThat(result)
-      .isEqualTo(Result.Error(listOf("error1", "error2")))
+      .isEqualTo(Err(listOf("error1", "error2")))
   }
 
   @Test
@@ -252,7 +253,7 @@ class SampleImplementationTest {
       .validate(draft)
 
     assertThat(result)
-      .isEqualTo(Result.Error(listOf("error1", "error2", "some age error")))
+      .isEqualTo(Err(listOf("error1", "error2", "some age error")))
   }
 
   @Test
@@ -266,8 +267,8 @@ class SampleImplementationTest {
 
     val result = validator.validate(AddressDraft("fjfj", "fjfj", 33, emptyMap(), poBox = "33"))
     assertThat(result)
-      .isInstanceOf(Result.Ok::class.java)
-    assertThat((result as Result.Ok).value.districtNameId)
+      .isInstanceOf(Ok::class.java)
+    assertThat((result as Ok).value.districtNameId)
       .isEqualTo("hubba bubba")
   }
 
@@ -282,8 +283,8 @@ class SampleImplementationTest {
 
     val result = validator.validate(AddressDraft("fjfj", "fjfj", 33, emptyMap(), poBox = null))
     assertThat(result)
-      .isInstanceOf(Result.Ok::class.java)
-    assertThat((result as Result.Ok).value.poBox)
+      .isInstanceOf(Ok::class.java)
+    assertThat((result as Ok).value.poBox)
       .isNull()
   }
 }

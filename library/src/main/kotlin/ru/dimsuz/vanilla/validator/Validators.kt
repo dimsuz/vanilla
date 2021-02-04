@@ -1,23 +1,24 @@
 package ru.dimsuz.vanilla.validator
 
-import ru.dimsuz.vanilla.Result
+import com.github.michaelbull.result.Err
+import com.github.michaelbull.result.Ok
 import ru.dimsuz.vanilla.Validator
 
 object Validators {
   fun <I, E> ok(): Validator<I, I, E> {
-    return Validator { Result.Ok(it) }
+    return Validator { Ok(it) }
   }
 
   fun <I, E> keep(): Validator<I, I, E> = ok()
 
   fun <T : Any, E> isNotNull(error: E): Validator<T?, T, E> {
-    return Validator { input -> if (input != null) Result.Ok(input) else Result.Error(error) }
+    return Validator { input -> if (input != null) Ok(input) else Err(listOf(error)) }
   }
 
   fun <I : Any, E> isNullOr(validator: Validator<I, I, E>): Validator<I?, I?, E> {
     return Validator { input ->
       if (input == null) {
-        Result.Ok(input)
+        Ok(input)
       } else {
         validator.validate(input)
       }
@@ -26,13 +27,13 @@ object Validators {
 
   fun <E> isNotEmpty(error: E): Validator<String, String, E> {
     return Validator { input ->
-      if (input.isNotEmpty()) Result.Ok(input) else Result.Error(error)
+      if (input.isNotEmpty()) Ok(input) else Err(listOf(error))
     }
   }
 
   fun <E> isNotBlank(error: E): Validator<String, String, E> {
     return Validator { input ->
-      if (input.isNotBlank()) Result.Ok(input) else Result.Error(error)
+      if (input.isNotBlank()) Ok(input) else Err(listOf(error))
     }
   }
 
@@ -41,7 +42,7 @@ object Validators {
     error: E
   ): Validator<String, String, E> {
     return Validator { input ->
-      if (input.length >= length) Result.Ok(input) else Result.Error(error)
+      if (input.length >= length) Ok(input) else Err(listOf(error))
     }
   }
 
@@ -50,7 +51,7 @@ object Validators {
     error: E
   ): Validator<String, String, E> {
     return Validator { input ->
-      if (input.length <= length) Result.Ok(input) else Result.Error(error)
+      if (input.length <= length) Ok(input) else Err(listOf(error))
     }
   }
 
@@ -75,7 +76,7 @@ object Validators {
   ): Validator<String, String, E> {
     require(min <= max) { "invalid range ($min..$max), expected min <= max" }
     return Validator { input ->
-      if (input.length in (min..max)) Result.Ok(input) else Result.Error(error)
+      if (input.length in (min..max)) Ok(input) else Err(listOf(error))
     }
   }
 
@@ -91,7 +92,7 @@ object Validators {
     error: E
   ): Validator<String, String, E> {
     return Validator { input ->
-      if (input.matches(regex)) Result.Ok(input) else Result.Error(error)
+      if (input.matches(regex)) Ok(input) else Err(listOf(error))
     }
   }
 
@@ -100,7 +101,7 @@ object Validators {
     error: E
   ): Validator<T, T, E> {
     return Validator { input ->
-      if (input < value) Result.Ok(input) else Result.Error(error)
+      if (input < value) Ok(input) else Err(listOf(error))
     }
   }
 
@@ -109,7 +110,7 @@ object Validators {
     error: E
   ): Validator<T, T, E> {
     return Validator { input ->
-      if (input <= value) Result.Ok(input) else Result.Error(error)
+      if (input <= value) Ok(input) else Err(listOf(error))
     }
   }
 
@@ -118,7 +119,7 @@ object Validators {
     error: E
   ): Validator<T, T, E> {
     return Validator { input ->
-      if (input > value) Result.Ok(input) else Result.Error(error)
+      if (input > value) Ok(input) else Err(listOf(error))
     }
   }
 
@@ -127,7 +128,7 @@ object Validators {
     error: E
   ): Validator<T, T, E> {
     return Validator { input ->
-      if (input >= value) Result.Ok(input) else Result.Error(error)
+      if (input >= value) Ok(input) else Err(listOf(error))
     }
   }
 
@@ -136,11 +137,11 @@ object Validators {
   ): Validator<I, List<O>, E> {
     return Validator { input ->
       val results = input.asSequence().map { elementValidator.validate(it) }
-      if (results.all { it is Result.Ok }) {
-        Result.Ok(results.map { (it as Result.Ok).value }.toList())
+      if (results.all { it is Ok }) {
+        Ok(results.map { (it as Ok).value }.toList())
       } else {
-        val errors = results.filterIsInstance<Result.Error<E>>().flatMap { it.errors }
-        Result.Error(errors.toList())
+        val errors = results.filterIsInstance<Err<List<E>>>().flatMap { it.error }
+        Err(errors.toList())
       }
     }
   }

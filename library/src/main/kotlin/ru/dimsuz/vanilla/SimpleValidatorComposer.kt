@@ -1,5 +1,9 @@
 package ru.dimsuz.vanilla
 
+import com.github.michaelbull.result.Err
+import com.github.michaelbull.result.Ok
+import com.github.michaelbull.result.Result
+
 @Suppress("UNCHECKED_CAST") // interface generic params ensure consistent usage, internally can cast away
 internal class SimpleValidatorComposer<I, E> :
   ValidatorComposer<I, E> {
@@ -19,19 +23,19 @@ internal class SimpleValidatorComposer<I, E> :
     override fun <O> build(): Validator<CI, O, E> {
       return Validator { input ->
         var currentInput = input as Any
-        var errorResult: Result<O, E>? = null
+        var errorResult: Result<O, List<E>>? = null
         for (v in validators) {
           when (val result = v.validate(currentInput)) {
-            is Result.Error -> {
-              errorResult = result as Result<O, E>
+            is Err -> {
+              errorResult = result as Result<O, List<E>>
             }
-            is Result.Ok -> {
+            is Ok -> {
               currentInput = result.value
             }
           }
           if (errorResult != null) break
         }
-        errorResult ?: (Result.Ok(currentInput) as Result<O, E>)
+        errorResult ?: (Ok(currentInput) as Result<O, List<E>>)
       }
     }
   }

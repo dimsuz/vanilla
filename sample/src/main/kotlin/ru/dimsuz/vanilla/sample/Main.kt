@@ -1,6 +1,7 @@
 package ru.dimsuz.vanilla.sample
 
-import ru.dimsuz.vanilla.Result
+import com.github.michaelbull.result.Err
+import com.github.michaelbull.result.Ok
 import ru.dimsuz.vanilla.Validator
 import ru.dimsuz.vanilla.compose
 import ru.dimsuz.vanilla.validator.Validators.isNotNull
@@ -14,8 +15,8 @@ fun main() {
         startWith(isNotNull("age must not be null"))
           .andThen(
             Validator { input ->
-              input.toIntOrNull()?.let { Result.Ok(it) }
-                ?: Result.Error("error must be not null string convertible to int")
+              input.toIntOrNull()?.let { Ok(it) }
+                ?: Err(listOf("error must be not null string convertible to int"))
             }
           )
       }
