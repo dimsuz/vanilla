@@ -5,7 +5,7 @@ import com.github.michaelbull.result.Ok
 import com.github.michaelbull.result.andThen
 import com.github.michaelbull.result.map
 
-fun <I, O, E> compose(
+fun <I, O, E> buildValidator(
   body: ValidatorComposer<I, E>.() -> StartedValidatorComposer<I, O, E>,
 ): Validator<I, O, E> {
   return body(SimpleValidatorComposer()).build()

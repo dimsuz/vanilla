@@ -4,7 +4,7 @@ import com.github.michaelbull.result.Err
 import com.github.michaelbull.result.Ok
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
-import ru.dimsuz.vanilla.compose
+import ru.dimsuz.vanilla.buildValidator
 import ru.dimsuz.vanilla.sample.dummy.DummyValidator
 import ru.dimsuz.vanilla.validator.Validators.hasLengthLessThan
 import ru.dimsuz.vanilla.validator.Validators.isNotNull
@@ -153,7 +153,7 @@ class SampleImplementationTest {
 
     val result = PersonDraftValidatorBuilder<String>()
       .firstName(
-        compose {
+        buildValidator {
           startWith(DummyValidator.success("Fiodor", action = { trace.add("first") }))
             .andThen(DummyValidator.success("Fiodor2", action = { trace.add("second") }))
             .andThen(DummyValidator.success("Fiodor3", action = { trace.add("third") }))
@@ -191,7 +191,7 @@ class SampleImplementationTest {
 
     val result = PersonDraftValidatorBuilder<String>()
       .firstName(
-        compose {
+        buildValidator {
           startWith(DummyValidator.success("Fiodor", action = { trace.add("first") }))
             .andThen<String>(
               DummyValidator.fail(
@@ -234,9 +234,9 @@ class SampleImplementationTest {
 
     val result = PersonDraftValidatorBuilder<String>()
       .firstName(
-        compose {
+        buildValidator {
           startWith(DummyValidator.success("Fiodor", action = { trace.add("first") }))
-            .andThen<String>(
+            .andThen(
               DummyValidator.fail(
                 listOf("error1", "error2"),
                 action = { trace.add("second") }
