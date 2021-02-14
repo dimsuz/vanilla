@@ -47,7 +47,7 @@ object Validators {
 
   fun <E> hasLengthGreaterThanOrEqualTo(
     length: Int,
-    error: E
+    error: E,
   ): Validator<String, String, E> {
     return Validator { input ->
       if (input.length >= length) Ok(input) else Err(listOf(error))
@@ -56,7 +56,7 @@ object Validators {
 
   fun <E> hasLengthLessThanOrEqualTo(
     length: Int,
-    error: E
+    error: E,
   ): Validator<String, String, E> {
     return Validator { input ->
       if (input.length <= length) Ok(input) else Err(listOf(error))
@@ -65,14 +65,14 @@ object Validators {
 
   fun <E> hasLengthGreaterThan(
     length: Int,
-    error: E
+    error: E,
   ): Validator<String, String, E> {
     return hasLengthGreaterThanOrEqualTo(length + 1, error)
   }
 
   fun <E> hasLengthLessThan(
     length: Int,
-    error: E
+    error: E,
   ): Validator<String, String, E> {
     return hasLengthLessThanOrEqualTo(length - 1, error)
   }
@@ -80,7 +80,7 @@ object Validators {
   fun <E> hasLengthInRange(
     min: Int,
     max: Int,
-    error: E
+    error: E,
   ): Validator<String, String, E> {
     require(min <= max) { "invalid range ($min..$max), expected min <= max" }
     return Validator { input ->
@@ -90,14 +90,14 @@ object Validators {
 
   fun <E> matches(
     pattern: String,
-    error: E
+    error: E,
   ): Validator<String, String, E> {
     return matches(Regex(pattern), error)
   }
 
   fun <E> matches(
     regex: Regex,
-    error: E
+    error: E,
   ): Validator<String, String, E> {
     return Validator { input ->
       if (input.matches(regex)) Ok(input) else Err(listOf(error))
@@ -106,7 +106,7 @@ object Validators {
 
   fun <T : Comparable<T>, E> isLessThan(
     value: T,
-    error: E
+    error: E,
   ): Validator<T, T, E> {
     return Validator { input ->
       if (input < value) Ok(input) else Err(listOf(error))
@@ -115,7 +115,7 @@ object Validators {
 
   fun <T : Comparable<T>, E> isLessThanOrEqual(
     value: T,
-    error: E
+    error: E,
   ): Validator<T, T, E> {
     return Validator { input ->
       if (input <= value) Ok(input) else Err(listOf(error))
@@ -124,7 +124,7 @@ object Validators {
 
   fun <T : Comparable<T>, E> isGreaterThan(
     value: T,
-    error: E
+    error: E,
   ): Validator<T, T, E> {
     return Validator { input ->
       if (input > value) Ok(input) else Err(listOf(error))
@@ -133,7 +133,7 @@ object Validators {
 
   fun <T : Comparable<T>, E> isGreaterThanOrEqual(
     value: T,
-    error: E
+    error: E,
   ): Validator<T, T, E> {
     return Validator { input ->
       if (input >= value) Ok(input) else Err(listOf(error))
