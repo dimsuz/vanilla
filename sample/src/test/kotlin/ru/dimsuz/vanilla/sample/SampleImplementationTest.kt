@@ -9,6 +9,7 @@ import ru.dimsuz.vanilla.sample.dummy.DummyValidator
 import ru.dimsuz.vanilla.validator.Validators.hasLengthLessThan
 import ru.dimsuz.vanilla.validator.Validators.isNotNull
 import ru.dimsuz.vanilla.validator.Validators.isNullOr
+import ru.dimsuz.vanilla.validator.Validators.just
 import ru.dimsuz.vanilla.validator.Validators.ok
 
 class SampleImplementationTest {
@@ -263,7 +264,8 @@ class SampleImplementationTest {
       .house(isNotNull("null house"))
       .street(isNotNull("null street"))
       .poBox(isNullOr(ok()))
-      .buildWith("hubba bubba")
+      .districtNameId(just("hubba bubba"))
+      .build()
 
     val result = validator.validate(AddressDraft("fjfj", "fjfj", 33, emptyMap(), poBox = "33"))
     assertThat(result)
@@ -279,7 +281,8 @@ class SampleImplementationTest {
       .house(isNotNull("null house"))
       .street(isNotNull("null street"))
       .poBox(isNullOr(hasLengthLessThan(333, "error")))
-      .buildWith("hubba bubba")
+      .districtNameId(just("hubba bubba"))
+      .build()
 
     val result = validator.validate(AddressDraft("fjfj", "fjfj", 33, emptyMap(), poBox = null))
     assertThat(result)

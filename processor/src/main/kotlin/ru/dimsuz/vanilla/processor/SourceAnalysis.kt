@@ -57,7 +57,9 @@ fun findMatchingProperties(models: ModelPair): Either<Error, SourceAnalysisResul
     )
   } else {
     val unmappedTargetProperties = targetProps.minus(mapping.values).toSet()
-    Right(SourceAnalysisResult(models, mapping, unmappedTargetProperties))
+    val additionalProperties = unmappedTargetProperties
+      .associateBy { PropertySpec.builder(it.name, Unit::class).build() }
+    Right(SourceAnalysisResult(models, mapping + additionalProperties, unmappedTargetProperties))
   }
 }
 

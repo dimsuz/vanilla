@@ -262,6 +262,42 @@ class VanillaProcessorTest {
   }
 
   @Test
+  fun generatesPropertyRuleSignaturesForMissingProperties() {
+    val result = compile(
+      kotlin(
+        "source.kt",
+        """
+        import ru.dimsuz.vanilla.annotation.ValidatedAs
+
+        @ValidatedAs(Validated::class)
+        data class Draft(val firstName: Int)
+        data class Validated(val firstName: Float, val secondName: Int)
+        """.trimIndent()
+      )
+    )
+
+    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
+
+    val validatorClass = result.classLoader.loadClass("DraftValidatorBuilder").toImmutableKmClass()
+
+    val ruleFunction = validatorClass.functions.first { it.name == "secondName" }
+    assertThat(ruleFunction.valueParameters).hasSize(1)
+    val parameter = ruleFunction.valueParameters.first()
+    assertThat(parameter.name).isEqualTo("validator")
+    assertIsValidatorType(parameter.type)
+    parameter.type.withFirstTypeArg { type ->
+      assertThat(type?.classifier)
+        .isEqualTo(KmClassifier.Class("kotlin/Unit"))
+    }
+    parameter.type.withResultOkArg { type ->
+      assertThat(type?.classifier).isEqualTo(KmClassifier.Class("kotlin/Int"))
+    }
+
+    assertThat(ruleFunction.returnType.classifier)
+      .isEqualTo(KmClassifier.Class("DraftValidatorBuilder"))
+  }
+
+  @Test
   fun builderHasBuildMethod() {
     val result = compile(
       kotlin(
@@ -348,36 +384,6 @@ class VanillaProcessorTest {
       .isEqualTo(KmClassifier.Class("Draft"))
     assertThat(createValidateFunction?.returnType?.arguments?.get(1)?.type?.arguments?.get(0)?.type?.classifier)
       .isEqualTo(KmClassifier.Class("Validated"))
-  }
-
-  @Test
-  fun generatesBuildWith() {
-    val result = compile(
-      kotlin(
-        "source.kt",
-        """
-        import ru.dimsuz.vanilla.annotation.ValidatedAs
-        import ru.dimsuz.vanilla.annotation.ValidatedName
-
-        @ValidatedAs(Validated::class)
-        data class Draft(val address: Int?)
-        data class Validated(val address: Int, val cityId: String, val titleMapping: Map<Int, String>)
-        """.trimIndent()
-      )
-    )
-
-    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
-
-    val builderClass = result.classLoader.loadClass("DraftValidatorBuilder").toImmutableKmClass()
-    val buildFunction = builderClass.functions.find { it.name == "buildWith" }
-    assertThat(buildFunction).isNotNull()
-    assertThat(buildFunction!!.valueParameters).hasSize(2)
-    val firstParam = buildFunction.valueParameters[0]
-    val secondParam = buildFunction.valueParameters[1]
-    assertThat(firstParam.name).isEqualTo("cityId")
-    assertThat(firstParam.type?.classifier).isEqualTo(KmClassifier.Class("kotlin/String"))
-    assertThat(secondParam.name).isEqualTo("titleMapping")
-    assertThat(secondParam.type?.classifier).isEqualTo(KmClassifier.Class("kotlin/collections/Map"))
   }
 
   @Test

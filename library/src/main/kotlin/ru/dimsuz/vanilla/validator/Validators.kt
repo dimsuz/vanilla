@@ -9,6 +9,10 @@ object Validators {
     return Validator { Ok(it) }
   }
 
+  fun <O, E> just(value: O): Validator<Unit, O, E> {
+    return Validator { Ok(value) }
+  }
+
   fun <I, E> keep(): Validator<I, I, E> = ok()
 
   fun <T : Any, E> isNotNull(error: E): Validator<T?, T, E> {

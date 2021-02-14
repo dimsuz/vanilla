@@ -35,13 +35,24 @@ private fun createValidationExecStatements(
   errorsVariableName: String
 ): List<CodeBlock> {
   return analysisResult.mapping.map { (sProp, tProp) ->
+    val isUnmapped = analysisResult.unmappedTargetProperties.contains(tProp)
     CodeBlock.builder()
-      .beginControlFlow(
-        "val %N = when (val result = %N.validate(input.%N))",
-        tProp,
-        createRuleValidatorPropertyName(sProp.name),
-        sProp
-      )
+      .let {
+        if (isUnmapped) {
+          it.beginControlFlow(
+            "val %N = when (val result = %N.validate(Unit))",
+            tProp,
+            createRuleValidatorPropertyName(sProp.name)
+          )
+        } else {
+          it.beginControlFlow(
+            "val %N = when (val result = %N.validate(input.%N))",
+            tProp,
+            createRuleValidatorPropertyName(sProp.name),
+            sProp
+          )
+        }
+      }
       .beginControlFlow("is %T ->", Err::class.asTypeName())
       .addStatement("%N.addAll(result.error)", errorsVariableName)
       .addStatement("null")
@@ -109,34 +120,20 @@ private fun createCheckMissingRulesFunction(): FunSpec {
 private fun createBuildFunction(analysisResult: SourceAnalysisResult): List<FunSpec> {
   val checkMissingRulesFunction = createCheckMissingRulesFunction()
   val propertyNames = analysisResult.mapping.keys.map { createRuleValidatorPropertyName(it.name) }
-  val name = if (analysisResult.unmappedTargetProperties.isEmpty()) "build" else "buildWith"
-  val parameters = createUnmappedParameterSpecs(analysisResult)
   val propertyNamesTemplate = repeatTemplate("%N!!", propertyNames.size)
-  val unmappedPropertyNamesTemplate = if (parameters.isNotEmpty()) {
-    repeatTemplate("%N", parameters.size, prefix = ", ")
-  } else ""
   return listOf(
     checkMissingRulesFunction,
-    FunSpec.builder(name)
-      .addParameters(parameters)
+    FunSpec.builder("build")
       .returns(createValidatorParameterizedName(analysisResult))
       .addStatement("%N()", checkMissingRulesFunction)
       .addStatement(
-        "return %T(%N($propertyNamesTemplate$unmappedPropertyNamesTemplate))",
+        "return %T(%N($propertyNamesTemplate))",
         Validator::class,
         CREATE_VALIDATE_FUNCTION_NAME,
-        *(propertyNames + parameters.map { it.name }).toTypedArray()
+        *propertyNames.toTypedArray()
       )
       .build()
   )
-}
-
-private fun createUnmappedParameterSpecs(analysisResult: SourceAnalysisResult): List<ParameterSpec> {
-  return if (analysisResult.unmappedTargetProperties.isNotEmpty()) {
-    analysisResult.unmappedTargetProperties.map { property ->
-      ParameterSpec.builder(property.name, property.type).build()
-    }
-  } else emptyList()
 }
 
 private fun createBuilderCompanionObject(analysisResult: SourceAnalysisResult): TypeSpec {
@@ -150,7 +147,6 @@ private fun createValidateFunction(analysisResult: SourceAnalysisResult): FunSpe
     val typeName = VALIDATOR_CLASS_NAME.parameterizedBy(sourceProp.type, targetProp.type, TypeVariableName("E"))
     ParameterSpec(createRuleValidatorPropertyName(sourceProp.name), typeName)
   }
-  val unmappedParameters = createUnmappedParameterSpecs(analysisResult)
   return FunSpec
     .builder(CREATE_VALIDATE_FUNCTION_NAME)
     .addTypeVariable(TypeVariableName("E"))
@@ -161,7 +157,7 @@ private fun createValidateFunction(analysisResult: SourceAnalysisResult): FunSpe
       )
     )
     .addModifiers(KModifier.PRIVATE)
-    .addParameters(parameters + unmappedParameters)
+    .addParameters(parameters)
     .addCode(createValidateFunctionBody(analysisResult))
     .build()
 }
@@ -174,23 +170,19 @@ private fun createValidateFunctionBody(analysisResult: SourceAnalysisResult): Co
   val targetClassName = extractTargetClassName(analysisResult)
   val errorsVariableName = "errors"
   val validationStatements = createValidationExecStatements(analysisResult, errorsVariableName)
-  val unmappedPropertyNames = analysisResult.unmappedTargetProperties.map { it.name }
   val validatorParametersTemplate = analysisResult.mapping.values.joinToString { tProp ->
     if (analysisResult.targetPropertyIsNullable(tProp.name)) "%N = %N" else "%N = %N!!"
   }
-  val unmappedParametersTemplate = if (unmappedPropertyNames.isNotEmpty()) {
-    repeatTemplate("%N = %N", unmappedPropertyNames.size, prefix = ", ")
-  } else ""
   return CodeBlock.builder()
     .beginControlFlow("return { input ->") // BEGIN FLOW_A
     .addStatement("val %N = mutableListOf<E>()", errorsVariableName)
     .add(validationStatements.fold(CodeBlock.builder(), { builder, block -> builder.add(block) }).build())
     .beginControlFlow("if (%N.isEmpty())", errorsVariableName) // BEGIN FLOW_B
     .addStatement(
-      "%T(%T($validatorParametersTemplate$unmappedParametersTemplate))",
+      "%T(%T($validatorParametersTemplate))",
       Ok::class.asTypeName(),
       targetClassName,
-      *(analysisResult.mapping.values + unmappedPropertyNames).flatMap { name -> listOf(name, name) }.toTypedArray()
+      *(analysisResult.mapping.values).flatMap { name -> listOf(name, name) }.toTypedArray()
     )
     .endControlFlow() // END FLOW_B
     .beginControlFlow("else") // BEGIN FLOW_C
