@@ -15,8 +15,12 @@ object Validators {
 
   fun <I, E> keep(): Validator<I, I, E> = ok()
 
-  fun <T : Any, E> isNotNull(error: E): Validator<T?, T, E> {
+  fun <I : Any, E> isNotNull(error: E): Validator<I?, I, E> {
     return Validator { input -> if (input != null) Ok(input) else Err(listOf(error)) }
+  }
+
+  fun <I : Any, O, E> isNotNullAnd(validator: Validator<I, O, E>, error: E): Validator<I?, O, E> {
+    return Validator { input -> if (input != null) validator.validate(input) else Err(listOf(error)) }
   }
 
   fun <I : Any, E> isNullOr(validator: Validator<I, I, E>): Validator<I?, I?, E> {
