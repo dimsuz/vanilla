@@ -39,7 +39,7 @@ private fun createValidationExecStatements(
       .beginControlFlow(
         "val %N = when (val result = %N.validate(input.%N))",
         tProp,
-        createRuleValidatorPropertyName(sProp),
+        createRuleValidatorPropertyName(sProp.name),
         sProp
       )
       .beginControlFlow("is %T ->", Err::class.asTypeName())
@@ -83,16 +83,14 @@ private fun createBuilderRuleFunctions(
   builderClassName: ClassName,
   analysisResult: SourceAnalysisResult
 ): Iterable<FunSpec> {
-  return analysisResult.mapping.map { (sourcePropName, targetPropName) ->
-    val sourcePropType = analysisResult.models.sourceTypeSpec.propertySpecs.first { it.name == sourcePropName }.type
-    val targetPropType = analysisResult.models.targetTypeSpec.propertySpecs.first { it.name == targetPropName }.type
+  return analysisResult.mapping.map { (sourceProp, targetProp) ->
     val propValidatorType = VALIDATOR_CLASS_NAME
-      .parameterizedBy(sourcePropType, targetPropType, TypeVariableName("E"))
-    FunSpec.builder(sourcePropName)
+      .parameterizedBy(sourceProp.type, targetProp.type, TypeVariableName("E"))
+    FunSpec.builder(sourceProp.name)
       .addParameter("validator", propValidatorType)
       .returns(builderClassName.parameterizedBy(TypeVariableName("E")))
-      .addStatement("%N.remove(%S)", MISSING_RULES_PROPERTY_NAME, sourcePropName)
-      .addStatement("%N = validator", createRuleValidatorPropertyName(sourcePropName))
+      .addStatement("%N.remove(%S)", MISSING_RULES_PROPERTY_NAME, sourceProp.name)
+      .addStatement("%N = validator", createRuleValidatorPropertyName(sourceProp.name))
       .addStatement("return this")
       .build()
   }
@@ -110,7 +108,7 @@ private fun createCheckMissingRulesFunction(): FunSpec {
 
 private fun createBuildFunction(analysisResult: SourceAnalysisResult): List<FunSpec> {
   val checkMissingRulesFunction = createCheckMissingRulesFunction()
-  val propertyNames = analysisResult.mapping.keys.map { createRuleValidatorPropertyName(it) }
+  val propertyNames = analysisResult.mapping.keys.map { createRuleValidatorPropertyName(it.name) }
   val name = if (analysisResult.unmappedTargetProperties.isEmpty()) "build" else "buildWith"
   val parameters = createUnmappedParameterSpecs(analysisResult)
   val propertyNamesTemplate = repeatTemplate("%N!!", propertyNames.size)
@@ -148,11 +146,9 @@ private fun createBuilderCompanionObject(analysisResult: SourceAnalysisResult): 
 }
 
 private fun createValidateFunction(analysisResult: SourceAnalysisResult): FunSpec {
-  val parameters = analysisResult.mapping.map { (sourcePropName, targetPropName) ->
-    val sourcePropType = analysisResult.models.sourceTypeSpec.propertySpecs.first { it.name == sourcePropName }.type
-    val targetPropType = analysisResult.models.targetTypeSpec.propertySpecs.first { it.name == targetPropName }.type
-    val typeName = VALIDATOR_CLASS_NAME.parameterizedBy(sourcePropType, targetPropType, TypeVariableName("E"))
-    ParameterSpec(createRuleValidatorPropertyName(sourcePropName), typeName)
+  val parameters = analysisResult.mapping.map { (sourceProp, targetProp) ->
+    val typeName = VALIDATOR_CLASS_NAME.parameterizedBy(sourceProp.type, targetProp.type, TypeVariableName("E"))
+    ParameterSpec(createRuleValidatorPropertyName(sourceProp.name), typeName)
   }
   val unmappedParameters = createUnmappedParameterSpecs(analysisResult)
   return FunSpec
@@ -179,8 +175,8 @@ private fun createValidateFunctionBody(analysisResult: SourceAnalysisResult): Co
   val errorsVariableName = "errors"
   val validationStatements = createValidationExecStatements(analysisResult, errorsVariableName)
   val unmappedPropertyNames = analysisResult.unmappedTargetProperties.map { it.name }
-  val validatorParametersTemplate = analysisResult.mapping.values.joinToString { tPropName ->
-    if (analysisResult.targetPropertyIsNullable(tPropName)) "%N = %N" else "%N = %N!!"
+  val validatorParametersTemplate = analysisResult.mapping.values.joinToString { tProp ->
+    if (analysisResult.targetPropertyIsNullable(tProp.name)) "%N = %N" else "%N = %N!!"
   }
   val unmappedParametersTemplate = if (unmappedPropertyNames.isNotEmpty()) {
     repeatTemplate("%N = %N", unmappedPropertyNames.size, prefix = ", ")
@@ -227,19 +223,17 @@ private fun createResultParameterizedByTargetName(analysisResult: SourceAnalysis
 
 private fun createBuilderProperties(analysisResult: SourceAnalysisResult): List<PropertySpec> {
   return ArrayList<PropertySpec>(analysisResult.mapping.size + 1).apply {
-    add(createMissingFieldRulesProperty(analysisResult.mapping.keys))
+    add(createMissingFieldRulesProperty(analysisResult.mapping.keys.mapTo(mutableSetOf()) { it.name }))
     addAll(createRuleValidatorProperties(analysisResult))
   }
 }
 
 private fun createRuleValidatorProperties(analysisResult: SourceAnalysisResult): Iterable<PropertySpec> {
-  return analysisResult.mapping.map { (sourcePropName, targetPropName) ->
-    val sourcePropType = analysisResult.models.sourceTypeSpec.propertySpecs.first { it.name == sourcePropName }.type
-    val targetPropType = analysisResult.models.targetTypeSpec.propertySpecs.first { it.name == targetPropName }.type
+  return analysisResult.mapping.map { (sourceProp, targetProp) ->
     val typeName = VALIDATOR_CLASS_NAME
-      .parameterizedBy(sourcePropType, targetPropType, TypeVariableName("E"))
+      .parameterizedBy(sourceProp.type, targetProp.type, TypeVariableName("E"))
       .copy(nullable = true)
-    PropertySpec.builder(createRuleValidatorPropertyName(sourcePropName), typeName, KModifier.PRIVATE)
+    PropertySpec.builder(createRuleValidatorPropertyName(sourceProp.name), typeName, KModifier.PRIVATE)
       .mutable(true)
       .initializer("null")
       .build()

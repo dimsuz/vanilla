@@ -43,11 +43,11 @@ fun findMatchingProperties(models: ModelPair): Either<Error, SourceAnalysisResul
   // See NOTE_PROPERTY_SORTING_ORDER
   val sourceProps = models.sourceTypeSpec.propertySpecs.sortedByDeclarationOrderIn(models.sourceElement)
   val targetProps = models.targetTypeSpec.propertySpecs.sortedByDeclarationOrderIn(models.targetElement)
-  val mapping = mutableMapOf<String, String>()
+  val mapping = mutableMapOf<PropertySpec, PropertySpec>()
   sourceProps.forEach { sProp ->
     val tProp = targetProps.find { it.name == sProp.mappedName(models.sourceElement) }
     if (tProp != null) {
-      mapping[sProp.name] = tProp.name
+      mapping[sProp] = tProp
     }
   }
   return if (mapping.isEmpty()) {
@@ -56,7 +56,7 @@ fun findMatchingProperties(models: ModelPair): Either<Error, SourceAnalysisResul
         "annotation to properties of \"${models.sourceTypeSpec.name}\" class"
     )
   } else {
-    val unmappedTargetProperties = targetProps.filterTo(mutableSetOf()) { !mapping.containsValue(it.name) }
+    val unmappedTargetProperties = targetProps.minus(mapping.values).toSet()
     Right(SourceAnalysisResult(models, mapping, unmappedTargetProperties))
   }
 }

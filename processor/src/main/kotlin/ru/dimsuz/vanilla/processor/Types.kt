@@ -8,7 +8,7 @@ typealias Error = String
 
 data class SourceAnalysisResult(
   val models: ModelPair,
-  val mapping: Map<String, String>,
+  val mapping: Map<PropertySpec, PropertySpec>,
   val unmappedTargetProperties: Set<PropertySpec>
 )
 
