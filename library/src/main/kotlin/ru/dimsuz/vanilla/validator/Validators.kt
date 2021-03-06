@@ -4,25 +4,46 @@ import com.github.michaelbull.result.Err
 import com.github.michaelbull.result.Ok
 import ru.dimsuz.vanilla.Validator
 
+/**
+ * Built-in validators
+ */
 object Validators {
+  /**
+   * Keeps input value as-is. Synonym for [keep]
+   */
   fun <I, E> ok(): Validator<I, I, E> {
     return Validator { Ok(it) }
   }
 
+  /**
+   * Keeps input value as-is. Synonym for [ok]
+   */
+  fun <I, E> keep(): Validator<I, I, E> = ok()
+
+  /**
+   * Always successfully validates and returns the provided [value]
+   */
   fun <O, E> just(value: O): Validator<Unit, O, E> {
     return Validator { Ok(value) }
   }
 
-  fun <I, E> keep(): Validator<I, I, E> = ok()
-
+  /**
+   * Returns an [Ok] with a non-null input or [error] if input value is null
+   */
   fun <I : Any, E> isNotNull(error: E): Validator<I?, I, E> {
     return Validator { input -> if (input != null) Ok(input) else Err(listOf(error)) }
   }
 
+  /**
+   * Delegates validation to the provided [validator] if input is not null, otherwise returns [error]
+   */
   fun <I : Any, O, E> isNotNullAnd(validator: Validator<I, O, E>, error: E): Validator<I?, O, E> {
     return Validator { input -> if (input != null) validator.validate(input) else Err(listOf(error)) }
   }
 
+  /**
+   * Returns an input value if it is not null, otherwise delegates to a provided [validator]
+   */
   fun <I : Any, E> isNullOr(validator: Validator<I, I, E>): Validator<I?, I?, E> {
     return Validator { input ->
       if (input == null) {
