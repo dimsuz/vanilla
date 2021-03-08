@@ -4,8 +4,8 @@ A validation library with distinct separation of pre- and post-validation models
 
 ## Usage
 
-This library assumes a clear separation between a non-validated and validated models, which makes only a validated and 
-mapped data appear in the resulting model:
+This library is based on an idea of a clear separation between a non-validated and validated models,
+which makes only a validated and mapped data appear in the resulting model:
 
 ```kotlin
 @ValidatedAs(Person::class)
@@ -41,7 +41,7 @@ val personDraft = PersonDraft(
   nickname = "al183"
 )
 
-println(validator.validate(personDraft)) 
+println(validator.validate(personDraft))
 // "Ok(Person(firstName = "Alex", lastName = "Smirnoff", age = 23))"
 
 println(validator.validate(personDraft.copy(firstName = null, lastName = null)))
@@ -51,9 +51,14 @@ println(validator.validate(personDraft.copy(firstName = null, lastName = null)))
 Note that validator successful output is a nice and clean `Person` class with _not nullable_ `firstName` and `lastName`
 fields and `age` field converted from `String?` to `Int`.
 
+Fields are matched by names, ones which are not present in the output model are ignored (`index`, `nickname`).
+Properties of the source model can be annotated with `@ValidatedName` annotation which specifies a custom property name
+to match in the target model.
+
 ## Validation result
 
-Resulting validator builder is parametrized by an error type, it is up to you to choose an error representation:
+Generated validator builder is parametrized by an error type, and it is up to you to choose an error representation.
+Here the `enum` is used to represent individual field errors.
 
 ```kotlin
 enum class PersonFormError { MissingFirstName, MissingLastName, AgeIsNotInt }
@@ -65,7 +70,7 @@ val validator = PersonDraftValidatorBuilder<PersonFormError>()
   .build()
 ```
 
-Validation result is an instance of the `Result` [type](https://github.com/michaelbull/kotlin-result) which would be either an `Ok(validatedModel)` or an `Err<List<E>>`, 
+Validation result is an instance of the `Result` [type](https://github.com/michaelbull/kotlin-result) which would be either an `Ok(validatedModel)` or an `Err<List<E>>`,
 where `E` is an error type:
 
 ```kotlin
@@ -77,4 +82,116 @@ println(result)
 // Err(error = [MissingFirstName, AgeIsNotInt])
 ```
 
-## Building and composing validators
+Note how errors from the individual field validators are accumulated in the final result.
+
+## Building custom validators
+
+Validator is simply a function of type `(I) -> Result<O, List<E>>`, where
+
+* `I` is some input type
+* `O` is a successful output type
+* `E` is an error type
+
+For example, here's an implementation of the (built-in) `isNotNull()` validator:
+
+```kotlin
+fun <I : Any, E> isNotNull(error: E): Validator<I?, I, E> {
+  return Validator { input -> if (input != null) Ok(input) else Err(listOf(error)) }
+}
+```
+
+Another example: an implementation of a custom validator which either converts `String` input to a `LocalDate`
+output or produces an error if conversion fails:
+
+```kotlin
+fun <E> hasDateFormat(pattern: String, error: E): Validator<String, LocalDate, E> {
+  return Validator { input ->
+    return try {
+      Ok(LocalDate.parse(input, DateTimeFormatter.ofPattern(pattern)))
+    } catch (e: DateTimeParseException) {
+      Err(listOf(error))
+    }
+  }
+}
+```
+
+## Composing validators
+
+Existing validators can be composed together to form a new validator using `buildValidator`:
+
+```kotlin
+fun <E> hasNotNullAgeAtLeast(age: Int, error: E): Validator<String?, Int, E> {
+  return buildValidator {
+    startWith(isNotNull(error = error))
+      .andThen(hasDateFormat(pattern = "yyyy.MM.dd", error = error))
+      .andThen(Validator { input: LocalDate -> Period.between(input, LocalDate.now()).years })
+      .andThen(isGreaterThanOrEqual(age, error))
+  }
+}
+```
+
+Each successive validator in the composition chain will receive an output produced by the previous validator:
+
+* `isNotNull` receives `String?` and returns `String`
+* `hasDateFormat` receives `String` and returns `LocalDate`
+* "inline" `Validator` receives `LocalDate` and returns `Int`
+* finally `isGreaterThanOrEqual` receives `Int` and checks its bounds
+
+The resulting custom validator can then be used just like any other one:
+
+```kotlin
+@ValidatedAs(Person::class)
+data class PersonDraft(
+  @ValidatedName("age")
+  val birthday: String?
+)
+data class Person(
+  val age: Int
+)
+
+val validator = PersonDraftValidatorBuilder<String>()
+  .hasNotNullAgeAtLeast(age = 18, "expected not null age of at least 18 years old")
+  .build()
+```
+
+## Nesting validator builders
+
+If you have several validator builders, they can be reused just like any other custom or built-in validator:
+
+```kotlin
+@ValidatedAs(Address::class)
+data class AddressDraft(val city: String?, val street: String?, val house: Int?)
+data class Address(val city: String, val street: String, val house: Int)
+
+@ValidatedAs(Person::class)
+data class PersonDraft(
+  val homeAddress: AddressDraft,
+  val extraAddresses: List<AddressDraft>?
+)
+data class Person(
+  val homeAddress: Address,
+  val extraAddresses: List<Address>
+)
+
+val addressValidator = AddressDraftValidatorBuilder<String>()
+  .city(isNotNull(error = "expected not null city"))
+  .street(isNotNull(error = "expected not null street"))
+  .house(isNotNull(error = "expected not null house"))
+  .build()
+
+val personValidator = PersonDraftValidatorBuilder<String>()
+  .homeAddress(addressValidator)
+  .extraAddresses(buildValidator {
+    startWith(isNotNull(error = "expected not null extra addresses"))
+      .andThen(eachElement(addressValidator))
+  })
+  .build()
+```
+
+Note how `personValidator` is able to turn each of the draft addresses in the list into a validated `Address` model.
+It will also accumulate errors (as en `Err` case) and produce a list of failed to validate addresses if there
+will be any.
+
+## Download
+
+TODO
