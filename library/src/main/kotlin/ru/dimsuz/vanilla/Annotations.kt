@@ -1,4 +1,4 @@
-package ru.dimsuz.vanilla.annotation
+package ru.dimsuz.vanilla
 
 import kotlin.reflect.KClass
 

@@ -26,7 +26,7 @@ class VanillaProcessorTest {
       kotlin(
         "source.kt",
         """
-        import ru.dimsuz.vanilla.annotation.ValidatedAs
+        import ru.dimsuz.vanilla.ValidatedAs
 
         @ValidatedAs(Validated::class)
         class Draft
@@ -48,7 +48,7 @@ class VanillaProcessorTest {
       kotlin(
         "source.kt",
         """
-        import ru.dimsuz.vanilla.annotation.ValidatedAs
+        import ru.dimsuz.vanilla.ValidatedAs
         
         @ValidatedAs(Validated::class)
         class Draft(val property: Int, val lastName: String)
@@ -70,7 +70,7 @@ class VanillaProcessorTest {
       kotlin(
         "source.kt",
         """
-        import ru.dimsuz.vanilla.annotation.ValidatedAs
+        import ru.dimsuz.vanilla.ValidatedAs
 
         @ValidatedAs(Validated::class)
         data class Draft<T>(val firstName: T?)
@@ -90,7 +90,7 @@ class VanillaProcessorTest {
       kotlin(
         "source.kt",
         """
-        import ru.dimsuz.vanilla.annotation.ValidatedAs
+        import ru.dimsuz.vanilla.ValidatedAs
 
         @ValidatedAs(Validated::class)
         data class Draft(val firstName: Int)
@@ -110,7 +110,7 @@ class VanillaProcessorTest {
       kotlin(
         "source.kt",
         """
-        import ru.dimsuz.vanilla.annotation.ValidatedAs
+        import ru.dimsuz.vanilla.ValidatedAs
 
         @ValidatedAs(Validated::class)
         data class Draft(val firstName: Int, val lastName: String)
@@ -134,7 +134,7 @@ class VanillaProcessorTest {
         """
         package ru.dimsuz.vanilla.test
 
-        import ru.dimsuz.vanilla.annotation.ValidatedAs
+        import ru.dimsuz.vanilla.ValidatedAs
 
         @ValidatedAs(Validated::class)
         data class Draft(val firstName: Int, val isAdult: String)
@@ -158,7 +158,7 @@ class VanillaProcessorTest {
       kotlin(
         "source.kt",
         """
-        import ru.dimsuz.vanilla.annotation.ValidatedAs
+        import ru.dimsuz.vanilla.ValidatedAs
 
         @ValidatedAs(Validated::class)
         data class Draft(val firstName: Int, val lastName: String)
@@ -180,7 +180,7 @@ class VanillaProcessorTest {
       kotlin(
         "source.kt",
         """
-        import ru.dimsuz.vanilla.annotation.ValidatedAs
+        import ru.dimsuz.vanilla.ValidatedAs
 
         @ValidatedAs(Validated::class)
         data class Draft(val firstName: Int)
@@ -216,7 +216,7 @@ class VanillaProcessorTest {
       kotlin(
         "source.kt",
         """
-        import ru.dimsuz.vanilla.annotation.ValidatedAs
+        import ru.dimsuz.vanilla.ValidatedAs
 
         object Name
         object NameComplex
@@ -267,7 +267,7 @@ class VanillaProcessorTest {
       kotlin(
         "source.kt",
         """
-        import ru.dimsuz.vanilla.annotation.ValidatedAs
+        import ru.dimsuz.vanilla.ValidatedAs
 
         @ValidatedAs(Validated::class)
         data class Draft(val firstName: Int)
@@ -303,7 +303,7 @@ class VanillaProcessorTest {
       kotlin(
         "source.kt",
         """
-        import ru.dimsuz.vanilla.annotation.ValidatedAs
+        import ru.dimsuz.vanilla.ValidatedAs
 
         @ValidatedAs(Validated::class)
         data class Draft(val firstName: Int?)
@@ -327,8 +327,8 @@ class VanillaProcessorTest {
       kotlin(
         "source.kt",
         """
-        import ru.dimsuz.vanilla.annotation.ValidatedAs
-        import ru.dimsuz.vanilla.annotation.ValidatedName
+        import ru.dimsuz.vanilla.ValidatedAs
+        import ru.dimsuz.vanilla.ValidatedName
 
         @ValidatedAs(Validated::class)
         data class Draft(@ValidatedName("address") val addr: Int?)
@@ -359,8 +359,8 @@ class VanillaProcessorTest {
       kotlin(
         "source.kt",
         """
-        import ru.dimsuz.vanilla.annotation.ValidatedAs
-        import ru.dimsuz.vanilla.annotation.ValidatedName
+        import ru.dimsuz.vanilla.ValidatedAs
+        import ru.dimsuz.vanilla.ValidatedName
 
         @ValidatedAs(Validated::class)
         data class Draft(@ValidatedName("address") val addr: Int?)
@@ -392,8 +392,8 @@ class VanillaProcessorTest {
       kotlin(
         "source.kt",
         """
-        import ru.dimsuz.vanilla.annotation.ValidatedAs
-        import ru.dimsuz.vanilla.annotation.ValidatedName
+        import ru.dimsuz.vanilla.ValidatedAs
+        import ru.dimsuz.vanilla.ValidatedName
 
         @ValidatedAs(Validated::class)
         internal data class Draft(val address: Int?)
@@ -415,8 +415,8 @@ class VanillaProcessorTest {
       kotlin(
         "source.kt",
         """
-        import ru.dimsuz.vanilla.annotation.ValidatedAs
-        import ru.dimsuz.vanilla.annotation.ValidatedName
+        import ru.dimsuz.vanilla.ValidatedAs
+        import ru.dimsuz.vanilla.ValidatedName
 
         @ValidatedAs(Validated::class)
         data class Draft(val address: Int?)

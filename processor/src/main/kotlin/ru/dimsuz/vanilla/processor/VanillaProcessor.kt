@@ -3,7 +3,7 @@ package ru.dimsuz.vanilla.processor
 import com.github.michaelbull.result.Err
 import com.github.michaelbull.result.combine
 import com.github.michaelbull.result.flatMap
-import ru.dimsuz.vanilla.annotation.ValidatedAs
+import ru.dimsuz.vanilla.ValidatedAs
 import ru.dimsuz.vanilla.processor.extension.error
 import javax.annotation.processing.AbstractProcessor
 import javax.annotation.processing.RoundEnvironment

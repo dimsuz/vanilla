@@ -9,8 +9,8 @@ import com.github.michaelbull.result.zip
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.metadata.specs.toTypeSpec
 import com.squareup.kotlinpoet.metadata.toImmutableKmClass
-import ru.dimsuz.vanilla.annotation.ValidatedAs
-import ru.dimsuz.vanilla.annotation.ValidatedName
+import ru.dimsuz.vanilla.ValidatedAs
+import ru.dimsuz.vanilla.ValidatedName
 import javax.annotation.processing.RoundEnvironment
 import javax.lang.model.element.Element
 import javax.lang.model.element.ElementKind

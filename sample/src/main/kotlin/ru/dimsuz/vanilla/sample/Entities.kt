@@ -1,7 +1,7 @@
 package ru.dimsuz.vanilla.sample
 
-import ru.dimsuz.vanilla.annotation.ValidatedAs
-import ru.dimsuz.vanilla.annotation.ValidatedName
+import ru.dimsuz.vanilla.ValidatedAs
+import ru.dimsuz.vanilla.ValidatedName
 
 @ValidatedAs(Person::class)
 data class PersonDraft(
