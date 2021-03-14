@@ -1,13 +1,12 @@
 plugins {
-  kotlin("jvm") version "1.4.21"
+  kotlin("jvm") version "1.4.31"
   `maven-publish`
-  id("org.jetbrains.dokka") version "1.4.0-rc"
+  id("org.jetbrains.dokka") version "1.4.20"
 }
 
 allprojects {
   repositories {
     mavenCentral()
-    jcenter()
   }
 }
 
