@@ -1,6 +1,5 @@
 package ru.dimsuz.vanilla.sample
 
-import ru.dimsuz.vanilla.annotation.DependsOn
 import ru.dimsuz.vanilla.annotation.ValidatedAs
 import ru.dimsuz.vanilla.annotation.ValidatedName
 
@@ -12,7 +11,6 @@ data class PersonDraft(
   @ValidatedName("address")
   val addr: AddressDraft?,
   val phoneNumbers: List<PhoneNumberDraft>?,
-  @DependsOn(["age, addr"])
   val friends: Map<PersonDraft, AddressDraft>?,
   val extraUnused1: Int,
   val extraUnused2: String?
