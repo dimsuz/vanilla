@@ -217,7 +217,7 @@ class SampleImplementationTest {
   }
 
   @Test
-  fun `given a set of rules when chain has error and non-chain has error should accummulate both`() {
+  fun `given a set of rules when chain has error and non-chain has error should accumulate both`() {
     val draft = createPersonDraftModel(
       firstName = "Fiodor",
       lastName = "Dostoyevsky",
@@ -237,7 +237,7 @@ class SampleImplementationTest {
         buildValidator {
           startWith(DummyValidator.success("Fiodor", action = { trace.add("first") }))
             .andThen(
-              DummyValidator.fail(
+              DummyValidator.fail<String, String>(
                 listOf("error1", "error2"),
                 action = { trace.add("second") }
               )
