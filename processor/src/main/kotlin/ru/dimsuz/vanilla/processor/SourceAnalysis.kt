@@ -1,16 +1,16 @@
 package ru.dimsuz.vanilla.processor
 
+import com.github.michaelbull.result.Err
+import com.github.michaelbull.result.Ok
+import com.github.michaelbull.result.Result
+import com.github.michaelbull.result.combine
+import com.github.michaelbull.result.toResultOr
+import com.github.michaelbull.result.zip
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.metadata.specs.toTypeSpec
 import com.squareup.kotlinpoet.metadata.toImmutableKmClass
 import ru.dimsuz.vanilla.annotation.ValidatedAs
 import ru.dimsuz.vanilla.annotation.ValidatedName
-import ru.dimsuz.vanilla.processor.either.Either
-import ru.dimsuz.vanilla.processor.either.Left
-import ru.dimsuz.vanilla.processor.either.Right
-import ru.dimsuz.vanilla.processor.either.join
-import ru.dimsuz.vanilla.processor.either.lift4
-import ru.dimsuz.vanilla.processor.either.toRightOr
 import javax.annotation.processing.RoundEnvironment
 import javax.lang.model.element.Element
 import javax.lang.model.element.ElementKind
@@ -19,27 +19,33 @@ import javax.lang.model.element.VariableElement
 import javax.lang.model.type.DeclaredType
 import javax.lang.model.type.MirroredTypeException
 
-fun findValidationModelPairs(roundEnv: RoundEnvironment): Either<Error, List<ModelPair>> {
+fun findValidationModelPairs(roundEnv: RoundEnvironment): Result<List<ModelPair>, Error> {
   return roundEnv.getElementsAnnotatedWith(ValidatedAs::class.java).map { element ->
     val sourceElement = element as? TypeElement
     val targetElement = element.extractTargetModelClass()
     if (sourceElement?.typeParameters?.isNotEmpty() == true) {
-      return Left("Source class \"${sourceElement.simpleName}\" has a generic parameter. This is not supported yet")
+      return Err("Source class \"${sourceElement.simpleName}\" has a generic parameter. This is not supported yet")
     }
     if (targetElement?.typeParameters?.isNotEmpty() == true) {
-      return Left("Target class \"${targetElement.simpleName}\" has a generic parameter. This is not supported yet")
+      return Err("Target class \"${targetElement.simpleName}\" has a generic parameter. This is not supported yet")
     }
     val sourceTypeSpec = sourceElement?.toImmutableKmClass()?.toTypeSpec(null)
-      .toRightOr("internal error: failed to read source model information")
+      .toResultOr { "internal error: failed to read source model information" }
     val targetTypeSpec = targetElement?.toImmutableKmClass()?.toTypeSpec(null)
-      .toRightOr("internal error: failed to read target model information")
-    val sourceTypeElement = Right(sourceElement!!)
-    val targetTypeElement = Right(targetElement!!)
-    lift4(sourceTypeSpec, targetTypeSpec, sourceTypeElement, targetTypeElement, ::ModelPair)
-  }.join()
+      .toResultOr { "internal error: failed to read target model information" }
+    val sourceTypeElement = Ok(sourceElement!!)
+    val targetTypeElement = Ok(targetElement!!)
+    zip(
+      { sourceTypeSpec },
+      { targetTypeSpec },
+      { sourceTypeElement },
+      { targetTypeElement },
+      ::ModelPair
+    )
+  }.combine()
 }
 
-fun findMatchingProperties(models: ModelPair): Either<Error, SourceAnalysisResult> {
+fun findMatchingProperties(models: ModelPair): Result<SourceAnalysisResult, Error> {
   // See NOTE_PROPERTY_SORTING_ORDER
   val sourceProps = models.sourceTypeSpec.propertySpecs.sortedByDeclarationOrderIn(models.sourceElement)
   val targetProps = models.targetTypeSpec.propertySpecs.sortedByDeclarationOrderIn(models.targetElement)
@@ -51,7 +57,7 @@ fun findMatchingProperties(models: ModelPair): Either<Error, SourceAnalysisResul
     }
   }
   return if (mapping.isEmpty()) {
-    Left(
+    Err(
       "failed to find matching properties. Consider adding @${ValidatedName::class.java.simpleName} " +
         "annotation to properties of \"${models.sourceTypeSpec.name}\" class"
     )
@@ -59,7 +65,7 @@ fun findMatchingProperties(models: ModelPair): Either<Error, SourceAnalysisResul
     val unmappedTargetProperties = targetProps.minus(mapping.values).toSet()
     val additionalProperties = unmappedTargetProperties
       .associateBy { PropertySpec.builder(it.name, Unit::class).build() }
-    Right(SourceAnalysisResult(models, mapping + additionalProperties, unmappedTargetProperties))
+    Ok(SourceAnalysisResult(models, mapping + additionalProperties, unmappedTargetProperties))
   }
 }
 

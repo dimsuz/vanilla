@@ -1,8 +1,8 @@
 package ru.dimsuz.vanilla
 
-import com.github.michaelbull.result.Result
-import com.github.michaelbull.result.Ok
 import com.github.michaelbull.result.Err
+import com.github.michaelbull.result.Ok
+import com.github.michaelbull.result.Result
 
 /**
  * Validates input data of type [I] and produces either:

@@ -1,9 +1,9 @@
 package ru.dimsuz.vanilla.processor
 
+import com.github.michaelbull.result.Err
+import com.github.michaelbull.result.combine
+import com.github.michaelbull.result.flatMap
 import ru.dimsuz.vanilla.annotation.ValidatedAs
-import ru.dimsuz.vanilla.processor.either.Left
-import ru.dimsuz.vanilla.processor.either.flatMap
-import ru.dimsuz.vanilla.processor.either.join
 import ru.dimsuz.vanilla.processor.extension.error
 import javax.annotation.processing.AbstractProcessor
 import javax.annotation.processing.RoundEnvironment
@@ -24,14 +24,13 @@ class VanillaProcessor : AbstractProcessor() {
   override fun process(annotations: Set<TypeElement>, env: RoundEnvironment): Boolean {
     val result = findValidationModelPairs(env)
       .flatMap { modelPairList ->
-        modelPairList.map { findMatchingProperties(it) }.join()
+        modelPairList.map { findMatchingProperties(it) }.combine()
       }
       .flatMap { propertyMappings ->
-        propertyMappings.map { generateValidator(processingEnv, it) }.join()
+        propertyMappings.map { generateValidator(processingEnv, it) }.combine()
       }
-    println("result: $result")
-    if (result is Left) {
-      processingEnv.messager.error(result.value)
+    if (result is Err) {
+      processingEnv.messager.error(result.error)
       return true
     }
     return true

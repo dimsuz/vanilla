@@ -2,6 +2,7 @@ package ru.dimsuz.vanilla.processor
 
 import com.github.michaelbull.result.Err
 import com.github.michaelbull.result.Ok
+import com.github.michaelbull.result.Result
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
@@ -16,12 +17,11 @@ import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.asTypeName
 import ru.dimsuz.vanilla.Validator
-import ru.dimsuz.vanilla.processor.either.Either
 import ru.dimsuz.vanilla.processor.extension.enclosingPackageName
 import ru.dimsuz.vanilla.processor.file.writeFile
 import javax.annotation.processing.ProcessingEnvironment
 
-fun generateValidator(processingEnv: ProcessingEnvironment, analysisResult: SourceAnalysisResult): Either<Error, Unit> {
+fun generateValidator(processingEnv: ProcessingEnvironment, analysisResult: SourceAnalysisResult): Result<Unit, Error> {
   val builderTypeSpec = createBuilderTypeSpec(analysisResult)
   val fileSpec = FileSpec.builder(analysisResult.models.sourceElement.enclosingPackageName, builderTypeSpec.name!!)
     .addType(builderTypeSpec)
