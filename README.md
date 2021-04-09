@@ -150,7 +150,7 @@ data class Person(
 )
 
 val validator = PersonDraftValidatorBuilder<String>()
-  .hasNotNullAgeAtLeast(age = 18, "expected not null age of at least 18 years old")
+  .birthday(hasNotNullAgeAtLeast(age = 18, "expected not null age of at least 18 years old"))
   .build()
 ```
 
