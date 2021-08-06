@@ -23,7 +23,7 @@ object Validators {
   /**
    * Always successfully validates and returns the provided [value]
    */
-  fun <O, E> just(value: O): Validator<Unit, O, E> {
+  fun <I, O, E> just(value: O): Validator<I, O, E> {
     return Validator { Ok(value) }
   }
 
