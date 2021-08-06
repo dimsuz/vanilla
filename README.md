@@ -195,8 +195,8 @@ will be any.
 ## Download
 
 ```
-implementation "ru.dimsuz.vanilla:0.9.0"
-kapt "ru.dimsuz.vanilla-processor:0.9.0"
+implementation "ru.dimsuz:vanilla:0.9.0"
+kapt "ru.dimsuz:vanilla-processor:0.9.0"
 ```
 
 ## License
