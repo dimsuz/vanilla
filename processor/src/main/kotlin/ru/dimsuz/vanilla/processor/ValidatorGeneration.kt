@@ -24,7 +24,10 @@ import javax.annotation.processing.ProcessingEnvironment
 
 fun generateValidator(processingEnv: ProcessingEnvironment, analysisResult: SourceAnalysisResult): Result<Unit, Error> {
   val builderTypeSpec = createBuilderTypeSpec(analysisResult)
-  val fileSpec = FileSpec.builder(analysisResult.models.sourceElement.enclosingPackageName, builderTypeSpec.name!!)
+  val fileSpec = FileSpec
+    .builder(
+      analysisResult.models.sourceElement.enclosingPackageName, builderTypeSpec.name!!
+    )
     .addType(builderTypeSpec)
     .build()
   return writeFile(processingEnv, fileSpec)
@@ -64,20 +67,19 @@ private fun createValidationExecStatements(
   }
 }
 
+@Suppress("EXPERIMENTAL_API_USAGE")
 private fun extractTargetClassName(analysisResult: SourceAnalysisResult): ClassName {
-  return ClassName(
-    analysisResult.models.targetElement.enclosingPackageName, analysisResult.models.targetTypeSpec.name!!
-  )
+  return analysisResult.models.targetElement.asClassName()
 }
 
+@Suppress("EXPERIMENTAL_API_USAGE")
 private fun extractSourceClassName(analysisResult: SourceAnalysisResult): ClassName {
-  return ClassName(
-    analysisResult.models.sourceElement.enclosingPackageName, analysisResult.models.sourceTypeSpec.name!!
-  )
+  return analysisResult.models.sourceElement.asClassName()
 }
 
 private fun createBuilderTypeSpec(analysisResult: SourceAnalysisResult): TypeSpec {
-  val className = ClassName("", "${analysisResult.models.sourceTypeSpec.name}ValidatorBuilder")
+  val sourceClassName = extractSourceClassName(analysisResult)
+  val className = ClassName("", "${sourceClassName.simpleNames.joinToString(separator = "")}ValidatorBuilder")
   val classModifiers = if (analysisResult.models.sourceTypeSpec.modifiers.contains(KModifier.INTERNAL) ||
     analysisResult.models.targetTypeSpec.modifiers.contains(KModifier.INTERNAL)
   ) listOf(KModifier.INTERNAL) else emptyList()

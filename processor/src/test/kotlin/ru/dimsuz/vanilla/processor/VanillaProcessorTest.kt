@@ -432,9 +432,103 @@ class VanillaProcessorTest {
       .isTrue()
   }
 
+  @Test
+  fun finishesSuccessfullyForSourceInsideClass() {
+    val result = compile(
+      kotlin(
+        "source.kt",
+        """
+        import ru.dimsuz.vanilla.ValidatedAs
+        import ru.dimsuz.vanilla.ValidatedName
+
+        sealed class Drafts {
+          @ValidatedAs(Validated::class)
+          data class Draft(val address: Int?) : Drafts()
+        }
+        data class Validated(val address: Int, val cityId: String, val titleMapping: Map<Int, String>)
+        """.trimIndent()
+      )
+    )
+
+    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
+
+    val clazz = try {
+      result.classLoader.loadClass("DraftsDraftValidatorBuilder")
+    } catch (e: ClassNotFoundException) {
+      null
+    }
+    assertThat(clazz).isNotNull()
+  }
+
+  @Test
+  fun finishesSuccessfullyForTargetInsideClass() {
+    val result = compile(
+      kotlin(
+        "source.kt",
+        """
+        import ru.dimsuz.vanilla.ValidatedAs
+        import ru.dimsuz.vanilla.ValidatedName
+
+        @ValidatedAs(ValidatedModels.Validated::class)
+        data class Draft(val address: Int?)
+        sealed class ValidatedModels {
+          data class Validated(
+            val address: Int,
+            val cityId: String,
+            val titleMapping: Map<Int, String>,
+          ) : ValidatedModels()
+        }
+        """.trimIndent()
+      )
+    )
+
+    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
+
+    val clazz = try {
+      result.classLoader.loadClass("DraftValidatorBuilder")
+    } catch (e: ClassNotFoundException) {
+      null
+    }
+    assertThat(clazz).isNotNull()
+  }
+
+  @Test
+  fun finishesSuccessfullyForSourceAndTargetInsideClass() {
+    val result = compile(
+      kotlin(
+        "source.kt",
+        """
+        import ru.dimsuz.vanilla.ValidatedAs
+        import ru.dimsuz.vanilla.ValidatedName
+
+        sealed class Drafts {
+          interface Nested {
+            @ValidatedAs(ValidatedModels.Validated::class)
+            data class Draft(val address: Int?) : Drafts()
+          }
+        }
+        sealed class ValidatedModels {
+          data class Validated(
+            val address: Int,
+            val cityId: String,
+            val titleMapping: Map<Int, String>,
+          ) : ValidatedModels()
+        }
+        """.trimIndent()
+      )
+    )
+
+    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
+
+    val clazz = try {
+      result.classLoader.loadClass("DraftsNestedDraftValidatorBuilder")
+    } catch (e: ClassNotFoundException) {
+      null
+    }
+    assertThat(clazz).isNotNull()
+  }
+
   // TODO generates property validator signature which has target field type if it differs from source
-  // TODO generates properly if source/target classes are inside another class
-  // TODO generates properly if source/target classes are inside another interface
   // TODO gives an error if source or target is private,must be public/internal
 
   private fun assertIsValidatorType(type: ImmutableKmType?) {
