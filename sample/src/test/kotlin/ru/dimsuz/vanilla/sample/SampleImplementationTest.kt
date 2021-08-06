@@ -7,6 +7,7 @@ import org.junit.Test
 import ru.dimsuz.vanilla.buildValidator
 import ru.dimsuz.vanilla.sample.dummy.DummyValidator
 import ru.dimsuz.vanilla.validator.Validators.hasLengthLessThan
+import ru.dimsuz.vanilla.validator.Validators.isNotBlank
 import ru.dimsuz.vanilla.validator.Validators.isNotNull
 import ru.dimsuz.vanilla.validator.Validators.isNullOr
 import ru.dimsuz.vanilla.validator.Validators.just
@@ -289,6 +290,27 @@ class SampleImplementationTest {
       .isInstanceOf(Ok::class.java)
     assertThat((result as Ok).value.poBox)
       .isNull()
+  }
+
+  @Test
+  fun `correctly composes nullable field validator`() {
+    val validator = AddressDraftValidatorBuilder<String>()
+      .city(
+        buildValidator {
+          startWith(isNotNull("null city"))
+            .andThen(isNotBlank("blank city"))
+            .andThen(just("city"))
+        }
+      )
+      .house(isNotNull("null house"))
+      .street(isNotNull("null street"))
+      .poBox(isNullOr(hasLengthLessThan(333, "error")))
+      .districtNameId(just("hubba bubba"))
+      .build()
+
+    val result = validator.validate(AddressDraft(null, "fjfj", 33, emptyMap(), poBox = null))
+    assertThat(result)
+      .isInstanceOf(Err::class.java)
   }
 }
 
