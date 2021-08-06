@@ -1,5 +1,5 @@
 plugins {
-  kotlin("jvm") version "1.4.31"
+  kotlin("jvm") version "1.5.21"
   `maven-publish`
   signing
   id("org.jetbrains.dokka") version "1.4.20"
@@ -15,7 +15,7 @@ allprojects {
 val ktlint: Configuration by configurations.creating
 
 dependencies {
-  ktlint("com.pinterest:ktlint:0.40.0")
+  ktlint("com.pinterest:ktlint:0.42.0")
 }
 
 val outputDir = "${project.buildDir}/reports/ktlint/"
