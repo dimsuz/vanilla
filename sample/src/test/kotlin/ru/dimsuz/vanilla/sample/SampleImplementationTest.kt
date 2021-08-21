@@ -4,14 +4,15 @@ import com.github.michaelbull.result.Err
 import com.github.michaelbull.result.Ok
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
+import ru.dimsuz.vanilla.Validator
 import ru.dimsuz.vanilla.buildValidator
 import ru.dimsuz.vanilla.sample.dummy.DummyValidator
-import ru.dimsuz.vanilla.validator.Validators.hasLengthLessThan
-import ru.dimsuz.vanilla.validator.Validators.isNotBlank
-import ru.dimsuz.vanilla.validator.Validators.isNotNull
-import ru.dimsuz.vanilla.validator.Validators.isNullOr
-import ru.dimsuz.vanilla.validator.Validators.just
-import ru.dimsuz.vanilla.validator.Validators.ok
+import ru.dimsuz.vanilla.validator.hasLengthLessThan
+import ru.dimsuz.vanilla.validator.isNotBlank
+import ru.dimsuz.vanilla.validator.isNotNull
+import ru.dimsuz.vanilla.validator.isNullOr
+import ru.dimsuz.vanilla.validator.just
+import ru.dimsuz.vanilla.validator.ok
 
 class SampleImplementationTest {
   @Test
@@ -80,8 +81,8 @@ class SampleImplementationTest {
     )
 
     val result = PersonDraftValidatorBuilder<String>()
-      .firstName(isNotNull("first name is null"))
-      .lastName(isNotNull("last name is null"))
+      .firstName(Validator.isNotNull("first name is null"))
+      .lastName(Validator.isNotNull("last name is null"))
       .age(DummyValidator.success(33))
       .addr(DummyValidator.success(expectedAddress))
       .phoneNumbers(DummyValidator.success(expectedPhoneNumbers))
@@ -160,7 +161,7 @@ class SampleImplementationTest {
             .andThen(DummyValidator.success("Fiodor3", action = { trace.add("third") }))
         }
       )
-      .lastName(isNotNull("expected not null "))
+      .lastName(Validator.isNotNull("expected not null "))
       .age(DummyValidator.success(33))
       .addr(DummyValidator.success(expectedAddress))
       .phoneNumbers(DummyValidator.success(expectedPhoneNumbers))
@@ -203,7 +204,7 @@ class SampleImplementationTest {
             .andThen(DummyValidator.success("Fiodor3", action = { trace.add("third") }))
         }
       )
-      .lastName(isNotNull("expected not null"))
+      .lastName(Validator.isNotNull("expected not null"))
       .age(DummyValidator.success(33))
       .addr(DummyValidator.success(address))
       .phoneNumbers(DummyValidator.success(emptyList()))
@@ -246,7 +247,7 @@ class SampleImplementationTest {
             .andThen(DummyValidator.success("Fiodor3", action = { trace.add("third") }))
         }
       )
-      .lastName(isNotNull("expected not null"))
+      .lastName(Validator.isNotNull("expected not null"))
       .age(DummyValidator.fail("some age error"))
       .addr(DummyValidator.success(address))
       .phoneNumbers(DummyValidator.success(emptyList()))
@@ -261,11 +262,11 @@ class SampleImplementationTest {
   @Test
   fun `given a model with extra target field, correctly constructs validated target`() {
     val validator = AddressDraftValidatorBuilder<String>()
-      .city(isNotNull("null city"))
-      .house(isNotNull("null house"))
-      .street(isNotNull("null street"))
-      .poBox(isNullOr(ok()))
-      .districtNameId(just("hubba bubba"))
+      .city(Validator.isNotNull("null city"))
+      .house(Validator.isNotNull("null house"))
+      .street(Validator.isNotNull("null street"))
+      .poBox(Validator.isNullOr(Validator.ok()))
+      .districtNameId(Validator.just("hubba bubba"))
       .build()
 
     val result = validator.validate(AddressDraft("fjfj", "fjfj", 33, emptyMap(), poBox = "33"))
@@ -278,11 +279,11 @@ class SampleImplementationTest {
   @Test
   fun `given a model with nullable field, correctly preserves it if validator leaves it null`() {
     val validator = AddressDraftValidatorBuilder<String>()
-      .city(isNotNull("null city"))
-      .house(isNotNull("null house"))
-      .street(isNotNull("null street"))
-      .poBox(isNullOr(hasLengthLessThan(333, "error")))
-      .districtNameId(just("hubba bubba"))
+      .city(Validator.isNotNull("null city"))
+      .house(Validator.isNotNull("null house"))
+      .street(Validator.isNotNull("null street"))
+      .poBox(Validator.isNullOr(Validator.hasLengthLessThan(333, "error")))
+      .districtNameId(Validator.just("hubba bubba"))
       .build()
 
     val result = validator.validate(AddressDraft("fjfj", "fjfj", 33, emptyMap(), poBox = null))
@@ -297,15 +298,15 @@ class SampleImplementationTest {
     val validator = AddressDraftValidatorBuilder<String>()
       .city(
         buildValidator {
-          startWith(isNotNull("null city"))
-            .andThen(isNotBlank("blank city"))
-            .andThen(just("city"))
+          startWith(Validator.isNotNull("null city"))
+            .andThen(Validator.isNotBlank("blank city"))
+            .andThen(Validator.just("city"))
         }
       )
-      .house(isNotNull("null house"))
-      .street(isNotNull("null street"))
-      .poBox(isNullOr(hasLengthLessThan(333, "error")))
-      .districtNameId(just("hubba bubba"))
+      .house(Validator.isNotNull("null house"))
+      .street(Validator.isNotNull("null street"))
+      .poBox(Validator.isNullOr(Validator.hasLengthLessThan(333, "error")))
+      .districtNameId(Validator.just("hubba bubba"))
       .build()
 
     val result = validator.validate(AddressDraft(null, "fjfj", 33, emptyMap(), poBox = null))

@@ -7,25 +7,11 @@ import org.junit.Test
 import ru.dimsuz.vanilla.Validator
 import ru.dimsuz.vanilla.satisfiesAllOf
 import ru.dimsuz.vanilla.satisfiesAnyOf
-import ru.dimsuz.vanilla.validator.Validators.eachElement
-import ru.dimsuz.vanilla.validator.Validators.hasLengthGreaterThan
-import ru.dimsuz.vanilla.validator.Validators.hasLengthGreaterThanOrEqualTo
-import ru.dimsuz.vanilla.validator.Validators.hasLengthInRange
-import ru.dimsuz.vanilla.validator.Validators.hasLengthLessThan
-import ru.dimsuz.vanilla.validator.Validators.hasLengthLessThanOrEqualTo
-import ru.dimsuz.vanilla.validator.Validators.isGreaterThan
-import ru.dimsuz.vanilla.validator.Validators.isGreaterThanOrEqual
-import ru.dimsuz.vanilla.validator.Validators.isLessThan
-import ru.dimsuz.vanilla.validator.Validators.isLessThanOrEqual
-import ru.dimsuz.vanilla.validator.Validators.isNotBlank
-import ru.dimsuz.vanilla.validator.Validators.isNotEmpty
-import ru.dimsuz.vanilla.validator.Validators.isNotNull
-import ru.dimsuz.vanilla.validator.Validators.isNullOr
 
 class BuiltInValidatorTest {
   @Test
   fun isNotNullFailsOnNull() {
-    val validator = isNotNull<Int, String>("expected not null")
+    val validator = Validator.isNotNull<Int, String>("expected not null")
     val result = validator.validate(null)
 
     assertThat(result)
@@ -34,7 +20,7 @@ class BuiltInValidatorTest {
 
   @Test
   fun isNotNullReportsOkOnNotNull() {
-    val validator = isNotNull<Int, String>("expected not null")
+    val validator = Validator.isNotNull<Int, String>("expected not null")
     val result = validator.validate(3)
 
     assertThat(result)
@@ -43,7 +29,7 @@ class BuiltInValidatorTest {
 
   @Test
   fun isNotBlankFailsOnEmpty() {
-    val validator = isNotBlank("error")
+    val validator = Validator.isNotBlank("error")
     val result = validator.validate("")
 
     assertThat(result)
@@ -52,7 +38,7 @@ class BuiltInValidatorTest {
 
   @Test
   fun isNotBlankFailsOnBlank() {
-    val validator = isNotBlank("error")
+    val validator = Validator.isNotBlank("error")
     val result = validator.validate("  \t")
 
     assertThat(result)
@@ -61,7 +47,7 @@ class BuiltInValidatorTest {
 
   @Test
   fun isNotBlankNoErrorForNonBlank() {
-    val validator = isNotBlank { "error" }
+    val validator = Validator.isNotBlank { "error" }
     val result = validator.validate("  hello")
 
     assertThat(result)
@@ -70,7 +56,7 @@ class BuiltInValidatorTest {
 
   @Test
   fun isNotEmptyFailsOnEmpty() {
-    val validator = isNotEmpty("error")
+    val validator = Validator.isNotEmpty("error")
     val result = validator.validate("")
 
     assertThat(result)
@@ -79,7 +65,7 @@ class BuiltInValidatorTest {
 
   @Test
   fun isNotEmptyNoErrorForNonEmpty() {
-    val validator = isNotEmpty { "error" }
+    val validator = Validator.isNotEmpty { "error" }
     val result = validator.validate("  hello")
 
     assertThat(result)
@@ -88,7 +74,7 @@ class BuiltInValidatorTest {
 
   @Test
   fun minimumLengthSuccessOnEnoughLength() {
-    val validator = hasLengthGreaterThanOrEqualTo(5) { "error" }
+    val validator = Validator.hasLengthGreaterThanOrEqualTo(5) { "error" }
     val result1 = validator.validate("world")
     val result2 = validator.validate("worldd")
 
@@ -100,7 +86,7 @@ class BuiltInValidatorTest {
 
   @Test
   fun minimumLengthFailsOnShortLength() {
-    val validator = hasLengthGreaterThanOrEqualTo(5, "error")
+    val validator = Validator.hasLengthGreaterThanOrEqualTo(5, "error")
     val result = validator.validate("worl")
 
     assertThat(result)
@@ -109,7 +95,7 @@ class BuiltInValidatorTest {
 
   @Test
   fun maximumLengthSuccessOnEnoughLength() {
-    val validator = hasLengthLessThanOrEqualTo(5) { "error" }
+    val validator = Validator.hasLengthLessThanOrEqualTo(5) { "error" }
     val result1 = validator.validate("world")
     val result2 = validator.validate("worl")
     val result3 = validator.validate("")
@@ -124,7 +110,7 @@ class BuiltInValidatorTest {
 
   @Test
   fun maximumLengthFailsOnLargeLength() {
-    val validator = hasLengthLessThanOrEqualTo(5, "error")
+    val validator = Validator.hasLengthLessThanOrEqualTo(5, "error")
     val result = validator.validate("worldd")
 
     assertThat(result)
@@ -135,7 +121,7 @@ class BuiltInValidatorTest {
   fun lengthInRangeThrowsOnInvalidRange() {
     var error: Exception? = null
     try {
-      hasLengthInRange(3, 2) { "error" }
+      Validator.hasLengthInRange(3, 2) { "error" }
     } catch (e: Exception) {
       error = e
     }
@@ -147,7 +133,7 @@ class BuiltInValidatorTest {
 
   @Test
   fun lengthInRangeFailsOnOutOfRangeValues() {
-    val validator = hasLengthInRange(2, 4, "error")
+    val validator = Validator.hasLengthInRange(2, 4, "error")
 
     val result = validator.validate("h")
 
@@ -157,7 +143,7 @@ class BuiltInValidatorTest {
 
   @Test
   fun lengthInRangeSuccessOnInRangeValues() {
-    val validator = hasLengthInRange(2, 4, "error")
+    val validator = Validator.hasLengthInRange(2, 4, "error")
 
     val result1 = validator.validate("he")
     val result2 = validator.validate("hel")
@@ -173,7 +159,7 @@ class BuiltInValidatorTest {
 
   @Test
   fun greaterThanLengthSuccessOnEnoughLength() {
-    val validator = hasLengthGreaterThan(5) { "error" }
+    val validator = Validator.hasLengthGreaterThan(5) { "error" }
     val result1 = validator.validate("123456")
     val result2 = validator.validate("1234567")
 
@@ -185,7 +171,7 @@ class BuiltInValidatorTest {
 
   @Test
   fun greaterThanLengthFailsOnShortLength() {
-    val validator = hasLengthGreaterThan(5, "error")
+    val validator = Validator.hasLengthGreaterThan(5, "error")
     val result = validator.validate("12345")
 
     assertThat(result)
@@ -194,7 +180,7 @@ class BuiltInValidatorTest {
 
   @Test
   fun lessThanLengthSuccessOnEnoughLength() {
-    val validator = hasLengthLessThan(5) { "error" }
+    val validator = Validator.hasLengthLessThan(5) { "error" }
     val result1 = validator.validate("1234")
     val result2 = validator.validate("123")
 
@@ -206,7 +192,7 @@ class BuiltInValidatorTest {
 
   @Test
   fun lessThanLengthFailsOnShortLength() {
-    val validator = hasLengthLessThan(5, "error")
+    val validator = Validator.hasLengthLessThan(5, "error")
     val result = validator.validate("12345")
 
     assertThat(result)
@@ -215,7 +201,7 @@ class BuiltInValidatorTest {
 
   @Test
   fun isLessThanSucceedsOnValidValue() {
-    val validator = isLessThan(5L, "error")
+    val validator = Validator.isLessThan(5L, "error")
     val result = validator.validate(4)
 
     assertThat(result)
@@ -224,7 +210,7 @@ class BuiltInValidatorTest {
 
   @Test
   fun isLessThanFailsOnInvalidValue() {
-    val validator = isLessThan(5L, "error")
+    val validator = Validator.isLessThan(5L, "error")
     val result1 = validator.validate(5)
     val result2 = validator.validate(6)
 
@@ -236,7 +222,7 @@ class BuiltInValidatorTest {
 
   @Test
   fun isLessThanOrEqualSucceedsOnValidValue() {
-    val validator = isLessThanOrEqual(5L, "error")
+    val validator = Validator.isLessThanOrEqual(5L, "error")
     val result1 = validator.validate(5)
     val result2 = validator.validate(4)
 
@@ -248,7 +234,7 @@ class BuiltInValidatorTest {
 
   @Test
   fun isLessThanOrEqualFailsOnInvalidValue() {
-    val validator = isLessThanOrEqual(5L, "error")
+    val validator = Validator.isLessThanOrEqual(5L, "error")
     val result1 = validator.validate(6)
     val result2 = validator.validate(7)
 
@@ -260,7 +246,7 @@ class BuiltInValidatorTest {
 
   @Test
   fun isGreaterThanSucceedsOnValidValue() {
-    val validator = isGreaterThan(5L, "error")
+    val validator = Validator.isGreaterThan(5L, "error")
     val result = validator.validate(6)
 
     assertThat(result)
@@ -269,7 +255,7 @@ class BuiltInValidatorTest {
 
   @Test
   fun isGreaterThanFailsOnInvalidValue() {
-    val validator = isGreaterThan(5L, "error")
+    val validator = Validator.isGreaterThan(5L, "error")
     val result1 = validator.validate(5)
     val result2 = validator.validate(4)
 
@@ -281,7 +267,7 @@ class BuiltInValidatorTest {
 
   @Test
   fun isGreaterThanOrEqualSucceedsOnValidValue() {
-    val validator = isGreaterThanOrEqual(5L, "error")
+    val validator = Validator.isGreaterThanOrEqual(5L, "error")
     val result1 = validator.validate(5)
     val result2 = validator.validate(6)
 
@@ -293,7 +279,7 @@ class BuiltInValidatorTest {
 
   @Test
   fun isGreaterThanOrEqualFailsOnInvalidValue() {
-    val validator = isGreaterThanOrEqual(5L, "error")
+    val validator = Validator.isGreaterThanOrEqual(5L, "error")
     val result1 = validator.validate(4)
     val result2 = validator.validate(3)
 
@@ -305,7 +291,7 @@ class BuiltInValidatorTest {
 
   @Test
   fun eachElementMapsOnSuccess() {
-    val validator = eachElement(Validator<Int, String, String> { input -> Ok(input.toString()) })
+    val validator = Validator.eachElement(Validator<Int, String, String> { input -> Ok(input.toString()) })
 
     val result = validator.validate(setOf(33, 88))
 
@@ -315,7 +301,7 @@ class BuiltInValidatorTest {
 
   @Test
   fun eachElementCollectsAllErrorsOnFailure() {
-    val validator = eachElement(
+    val validator = Validator.eachElement(
       Validator<Int, String, String> { input ->
         when (input) {
           88 -> Ok(input.toString())
@@ -333,7 +319,7 @@ class BuiltInValidatorTest {
 
   @Test
   fun eachElementReturnsOkOnEmptyList() {
-    val validator = eachElement(Validator<Int, String, String> { input -> Ok(input.toString()) })
+    val validator = Validator.eachElement(Validator<Int, String, String> { input -> Ok(input.toString()) })
 
     val result = validator.validate(emptyList())
 
@@ -473,7 +459,7 @@ class BuiltInValidatorTest {
 
   @Test
   fun isNullOrDoesNotProduceAnErrorOnNull() {
-    val validator = isNullOr(hasLengthGreaterThan(3, "error"))
+    val validator = Validator.isNullOr(Validator.hasLengthGreaterThan(3, "error"))
 
     val result = validator.validate(null)
 
@@ -483,7 +469,7 @@ class BuiltInValidatorTest {
 
   @Test
   fun isNullOrProducesAnErrorOnFailingNonNull() {
-    val validator = isNullOr(hasLengthGreaterThan(3, "error"))
+    val validator = Validator.isNullOr(Validator.hasLengthGreaterThan(3, "error"))
 
     val result = validator.validate("he")
 
@@ -493,7 +479,7 @@ class BuiltInValidatorTest {
 
   @Test
   fun isNullOrDoesNotProduceAnErrorOnCorrectNonNull() {
-    val validator = isNullOr(hasLengthGreaterThan(3, "error"))
+    val validator = Validator.isNullOr(Validator.hasLengthGreaterThan(3, "error"))
 
     val result = validator.validate("hello")
 

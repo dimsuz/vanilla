@@ -4,15 +4,15 @@ import com.github.michaelbull.result.Err
 import com.github.michaelbull.result.Ok
 import ru.dimsuz.vanilla.Validator
 import ru.dimsuz.vanilla.buildValidator
-import ru.dimsuz.vanilla.validator.Validators.isNotNull
+import ru.dimsuz.vanilla.validator.isNotNull
 
 fun main() {
   val validator = PersonDraftValidatorBuilder<String>()
-    .firstName(isNotNull("expected not null first name"))
-    .lastName(isNotNull("expected not null second name"))
+    .firstName(Validator.isNotNull("expected not null first name"))
+    .lastName(Validator.isNotNull("expected not null second name"))
     .age(
       buildValidator {
-        startWith(isNotNull("age must not be null"))
+        startWith(Validator.isNotNull("age must not be null"))
           .andThen(
             Validator { input ->
               input.toIntOrNull()?.let { Ok(it) }

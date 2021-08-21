@@ -1,7 +1,8 @@
 # Changelog
 
-## 0.10.1 - 2021-08-21
+## 0.11.0 - 2021-08-21
 
+* Remove `Validators` object, move built-in validators to be extensions on `Validator` companion object
 * Fix generation when source/target class is a `public` class enclosed an `internal` class
 * Add new combinators: `mapError`, `bind` (up to 14 arguments)
 

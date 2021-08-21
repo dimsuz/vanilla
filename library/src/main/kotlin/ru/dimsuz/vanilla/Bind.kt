@@ -4,7 +4,7 @@ import com.github.michaelbull.result.Err
 import com.github.michaelbull.result.Ok
 import com.github.michaelbull.result.get
 import com.github.michaelbull.result.onFailure
-import ru.dimsuz.vanilla.validator.Validators
+import ru.dimsuz.vanilla.validator.just
 
 /**
  * Applies multiple validators to the value and then uses [bindFn] function to produce a final result if they
@@ -37,7 +37,7 @@ fun <VI, VE, VO, A, B> Validator.Companion.bind(
   validatorB: Validator<VI, B, VE>,
   bindFn: (A, B) -> VO
 ): Validator<VI, VO, VE> {
-  val unitValidator = Validators.just<VI, Unit, VE>(Unit)
+  val unitValidator = Validator.just<VI, Unit, VE>(Unit)
   return Validator.bindN(
     validatorA,
     validatorB,
@@ -90,7 +90,7 @@ fun <VI, VE, VO, A, B, C> Validator.Companion.bind(
   validatorC: Validator<VI, C, VE>,
   bindFn: (A, B, C) -> VO
 ): Validator<VI, VO, VE> {
-  val unitValidator = Validators.just<VI, Unit, VE>(Unit)
+  val unitValidator = Validator.just<VI, Unit, VE>(Unit)
   return Validator.bindN(
     validatorA,
     validatorB,
@@ -144,7 +144,7 @@ fun <VI, VE, VO, A, B, C, D> Validator.Companion.bind(
   validatorD: Validator<VI, D, VE>,
   bindFn: (A, B, C, D) -> VO
 ): Validator<VI, VO, VE> {
-  val unitValidator = Validators.just<VI, Unit, VE>(Unit)
+  val unitValidator = Validator.just<VI, Unit, VE>(Unit)
   return Validator.bindN(
     validatorA,
     validatorB,
@@ -199,7 +199,7 @@ fun <VI, VE, VO, A, B, C, D, E> Validator.Companion.bind(
   validatorE: Validator<VI, E, VE>,
   bindFn: (A, B, C, D, E) -> VO
 ): Validator<VI, VO, VE> {
-  val unitValidator = Validators.just<VI, Unit, VE>(Unit)
+  val unitValidator = Validator.just<VI, Unit, VE>(Unit)
   return Validator.bindN(
     validatorA,
     validatorB,
@@ -255,7 +255,7 @@ fun <VI, VE, VO, A, B, C, D, E, F> Validator.Companion.bind(
   validatorF: Validator<VI, F, VE>,
   bindFn: (A, B, C, D, E, F) -> VO
 ): Validator<VI, VO, VE> {
-  val unitValidator = Validators.just<VI, Unit, VE>(Unit)
+  val unitValidator = Validator.just<VI, Unit, VE>(Unit)
   return Validator.bindN(
     validatorA,
     validatorB,
@@ -312,7 +312,7 @@ fun <VI, VE, VO, A, B, C, D, E, F, G> Validator.Companion.bind(
   validatorG: Validator<VI, G, VE>,
   bindFn: (A, B, C, D, E, F, G) -> VO
 ): Validator<VI, VO, VE> {
-  val unitValidator = Validators.just<VI, Unit, VE>(Unit)
+  val unitValidator = Validator.just<VI, Unit, VE>(Unit)
   return Validator.bindN(
     validatorA,
     validatorB,
@@ -370,7 +370,7 @@ fun <VI, VE, VO, A, B, C, D, E, F, G, H> Validator.Companion.bind(
   validatorH: Validator<VI, H, VE>,
   bindFn: (A, B, C, D, E, F, G, H) -> VO
 ): Validator<VI, VO, VE> {
-  val unitValidator = Validators.just<VI, Unit, VE>(Unit)
+  val unitValidator = Validator.just<VI, Unit, VE>(Unit)
   return Validator.bindN(
     validatorA,
     validatorB,
@@ -429,7 +429,7 @@ fun <VI, VE, VO, A, B, C, D, E, F, G, H, I> Validator.Companion.bind(
   validatorI: Validator<VI, I, VE>,
   bindFn: (A, B, C, D, E, F, G, H, I) -> VO
 ): Validator<VI, VO, VE> {
-  val unitValidator = Validators.just<VI, Unit, VE>(Unit)
+  val unitValidator = Validator.just<VI, Unit, VE>(Unit)
   return Validator.bindN(
     validatorA,
     validatorB,
@@ -489,7 +489,7 @@ fun <VI, VE, VO, A, B, C, D, E, F, G, H, I, J> Validator.Companion.bind(
   validatorJ: Validator<VI, J, VE>,
   bindFn: (A, B, C, D, E, F, G, H, I, J) -> VO
 ): Validator<VI, VO, VE> {
-  val unitValidator = Validators.just<VI, Unit, VE>(Unit)
+  val unitValidator = Validator.just<VI, Unit, VE>(Unit)
   return Validator.bindN(
     validatorA,
     validatorB,
@@ -550,7 +550,7 @@ fun <VI, VE, VO, A, B, C, D, E, F, G, H, I, J, K> Validator.Companion.bind(
   validatorK: Validator<VI, K, VE>,
   bindFn: (A, B, C, D, E, F, G, H, I, J, K) -> VO
 ): Validator<VI, VO, VE> {
-  val unitValidator = Validators.just<VI, Unit, VE>(Unit)
+  val unitValidator = Validator.just<VI, Unit, VE>(Unit)
   return Validator.bindN(
     validatorA,
     validatorB,
@@ -612,7 +612,7 @@ fun <VI, VE, VO, A, B, C, D, E, F, G, H, I, J, K, L> Validator.Companion.bind(
   validatorL: Validator<VI, L, VE>,
   bindFn: (A, B, C, D, E, F, G, H, I, J, K, L) -> VO
 ): Validator<VI, VO, VE> {
-  val unitValidator = Validators.just<VI, Unit, VE>(Unit)
+  val unitValidator = Validator.just<VI, Unit, VE>(Unit)
   return Validator.bindN(
     validatorA,
     validatorB,
@@ -675,7 +675,7 @@ fun <VI, VE, VO, A, B, C, D, E, F, G, H, I, J, K, L, M> Validator.Companion.bind
   validatorM: Validator<VI, M, VE>,
   bindFn: (A, B, C, D, E, F, G, H, I, J, K, L, M) -> VO
 ): Validator<VI, VO, VE> {
-  val unitValidator = Validators.just<VI, Unit, VE>(Unit)
+  val unitValidator = Validator.just<VI, Unit, VE>(Unit)
   return Validator.bindN(
     validatorA,
     validatorB,
