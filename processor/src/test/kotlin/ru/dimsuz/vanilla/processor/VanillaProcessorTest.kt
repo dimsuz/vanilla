@@ -433,6 +433,85 @@ class VanillaProcessorTest {
   }
 
   @Test
+  fun hasInternalModifierIfEnclosedByInternalClass() {
+    val result = compile(
+      kotlin(
+        "source.kt",
+        """
+        import ru.dimsuz.vanilla.ValidatedAs
+        import ru.dimsuz.vanilla.ValidatedName
+
+        internal sealed class Hello {
+          @ValidatedAs(Validated::class)
+          data class Draft(val address: Int?)
+          data class Validated(val address: Int, val cityId: String, val titleMapping: Map<Int, String>)
+        }
+        """.trimIndent()
+      )
+    )
+
+    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
+
+    val builderClass = result.classLoader.loadClass("HelloDraftValidatorBuilder").toImmutableKmClass()
+    assertThat(builderClass.isInternal)
+      .isTrue()
+  }
+
+  @Test
+  fun hasInternalModifierIfEnclosedByInternalInterface() {
+    val result = compile(
+      kotlin(
+        "source.kt",
+        """
+        import ru.dimsuz.vanilla.ValidatedAs
+        import ru.dimsuz.vanilla.ValidatedName
+
+        internal interface Hello {
+          @ValidatedAs(Validated::class)
+          data class Draft(val address: Int?)
+          data class Validated(val address: Int, val cityId: String, val titleMapping: Map<Int, String>)
+        }
+        """.trimIndent()
+      )
+    )
+
+    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
+
+    val builderClass = result.classLoader.loadClass("HelloDraftValidatorBuilder").toImmutableKmClass()
+    assertThat(builderClass.isInternal)
+      .isTrue()
+  }
+
+  @Test
+  fun hasInternalModifierIfDeepEnclosedByInternalInterface() {
+    val result = compile(
+      kotlin(
+        "source.kt",
+        """
+        import ru.dimsuz.vanilla.ValidatedAs
+        import ru.dimsuz.vanilla.ValidatedName
+
+        internal interface Hello {
+          class World {
+            sealed class Foo {
+              @ValidatedAs(Validated::class)
+              data class Draft(val address: Int?)
+              data class Validated(val address: Int, val cityId: String, val titleMapping: Map<Int, String>)
+            }
+          }
+        }
+        """.trimIndent()
+      )
+    )
+
+    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
+
+    val builderClass = result.classLoader.loadClass("HelloWorldFooDraftValidatorBuilder").toImmutableKmClass()
+    assertThat(builderClass.isInternal)
+      .isTrue()
+  }
+
+  @Test
   fun finishesSuccessfullyForSourceInsideClass() {
     val result = compile(
       kotlin(

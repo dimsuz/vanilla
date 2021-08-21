@@ -17,10 +17,13 @@ import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
+import com.squareup.kotlinpoet.metadata.isInternal
+import com.squareup.kotlinpoet.metadata.toImmutableKmClass
 import ru.dimsuz.vanilla.Validator
 import ru.dimsuz.vanilla.processor.extension.enclosingPackageName
 import ru.dimsuz.vanilla.processor.file.writeFile
 import javax.annotation.processing.ProcessingEnvironment
+import javax.lang.model.element.TypeElement
 
 fun generateValidator(processingEnv: ProcessingEnvironment, analysisResult: SourceAnalysisResult): Result<Unit, Error> {
   val builderTypeSpec = createBuilderTypeSpec(analysisResult)
@@ -80,17 +83,33 @@ private fun extractSourceClassName(analysisResult: SourceAnalysisResult): ClassN
 private fun createBuilderTypeSpec(analysisResult: SourceAnalysisResult): TypeSpec {
   val sourceClassName = extractSourceClassName(analysisResult)
   val className = ClassName("", "${sourceClassName.simpleNames.joinToString(separator = "")}ValidatorBuilder")
-  val classModifiers = if (analysisResult.models.sourceTypeSpec.modifiers.contains(KModifier.INTERNAL) ||
-    analysisResult.models.targetTypeSpec.modifiers.contains(KModifier.INTERNAL)
-  ) listOf(KModifier.INTERNAL) else emptyList()
   return TypeSpec.classBuilder(className)
     .addTypeVariable(TypeVariableName("E"))
     .addProperties(createBuilderProperties(analysisResult))
     .addFunctions(createBuilderRuleFunctions(className, analysisResult))
     .addFunctions(createBuildFunction(analysisResult))
     .addType(createBuilderCompanionObject(analysisResult))
-    .addModifiers(classModifiers)
+    .addModifiers(createBuilderClassModifiers(analysisResult))
     .build()
+}
+
+private fun createBuilderClassModifiers(analysisResult: SourceAnalysisResult): List<KModifier> {
+  return if (analysisResult.models.sourceElement.isInternalOrEnclosedByInternal() ||
+    analysisResult.models.targetElement.isInternalOrEnclosedByInternal()
+  ) {
+    listOf(KModifier.INTERNAL)
+  } else emptyList()
+}
+
+private fun TypeElement.isInternalOrEnclosedByInternal(): Boolean {
+  var element: TypeElement? = this
+  while (element != null) {
+    if (element.toImmutableKmClass().isInternal) {
+      return true
+    }
+    element = element.enclosingElement as? TypeElement
+  }
+  return false
 }
 
 private fun createBuilderRuleFunctions(

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.10.1 - 2021-08-21
+
+* Fix generation when source/target class is a `public` class enclosed an `internal` class
+
 ## 0.10.0 - 2021-08-06
 
 * Fix generation when source/target class is an inner class
