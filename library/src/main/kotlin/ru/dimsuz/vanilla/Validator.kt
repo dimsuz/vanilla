@@ -9,4 +9,7 @@ import com.github.michaelbull.result.Result
  *   - An [Ok] value, containing a validated data (which can be of different type [O])
  *   - An [Err] value, containing a list of validation errors
  */
-inline class Validator<I, O, E>(val validate: (I) -> Result<O, List<E>>)
+@JvmInline
+value class Validator<I, O, E>(val validate: (I) -> Result<O, List<E>>) {
+  companion object
+}

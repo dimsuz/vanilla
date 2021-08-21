@@ -4,6 +4,7 @@ import com.github.michaelbull.result.Err
 import com.github.michaelbull.result.Ok
 import com.github.michaelbull.result.andThen
 import com.github.michaelbull.result.map
+import com.github.michaelbull.result.mapError
 
 fun <I, O, E> buildValidator(
   body: ValidatorComposer<I, E>.() -> StartedValidatorComposer<I, O, E>,
@@ -18,6 +19,10 @@ fun <I, O1, O2, E> Validator<I, O1, E>.andThen(other: Validator<O1, O2, E>): Val
 
 fun <I, O1, O2, E> Validator<I, O1, E>.map(mapper: (O1) -> O2): Validator<I, O2, E> {
   return Validator { input -> this.validate(input).map(mapper) }
+}
+
+fun <I, O, E1, E2> Validator<I, O, E1>.mapError(map: (E1) -> E2): Validator<I, O, E2> {
+  return Validator { input -> this.validate(input).mapError { errors -> errors.map(map) } }
 }
 
 // TODO when documenting, mention that outputs are ignored, only Ok/Error matters
