@@ -18,7 +18,7 @@ import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
 import com.squareup.kotlinpoet.metadata.isInternal
-import com.squareup.kotlinpoet.metadata.toImmutableKmClass
+import com.squareup.kotlinpoet.metadata.toKmClass
 import ru.dimsuz.vanilla.Validator
 import ru.dimsuz.vanilla.processor.extension.enclosingPackageName
 import ru.dimsuz.vanilla.processor.file.writeFile
@@ -104,7 +104,7 @@ private fun createBuilderClassModifiers(analysisResult: SourceAnalysisResult): L
 private fun TypeElement.isInternalOrEnclosedByInternal(): Boolean {
   var element: TypeElement? = this
   while (element != null) {
-    if (element.toImmutableKmClass().isInternal) {
+    if (element.toKmClass().flags.isInternal) {
       return true
     }
     element = element.enclosingElement as? TypeElement

@@ -8,7 +8,7 @@ import com.github.michaelbull.result.toResultOr
 import com.github.michaelbull.result.zip
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.metadata.specs.toTypeSpec
-import com.squareup.kotlinpoet.metadata.toImmutableKmClass
+import com.squareup.kotlinpoet.metadata.toKmClass
 import ru.dimsuz.vanilla.ValidatedAs
 import ru.dimsuz.vanilla.ValidatedName
 import javax.annotation.processing.RoundEnvironment
@@ -29,9 +29,9 @@ fun findValidationModelPairs(roundEnv: RoundEnvironment): Result<List<ModelPair>
     if (targetElement?.typeParameters?.isNotEmpty() == true) {
       return Err("Target class \"${targetElement.simpleName}\" has a generic parameter. This is not supported yet")
     }
-    val sourceTypeSpec = sourceElement?.toImmutableKmClass()?.toTypeSpec(null)
+    val sourceTypeSpec = sourceElement?.toKmClass()?.toTypeSpec(null)
       .toResultOr { "internal error: failed to read source model information" }
-    val targetTypeSpec = targetElement?.toImmutableKmClass()?.toTypeSpec(null)
+    val targetTypeSpec = targetElement?.toKmClass()?.toTypeSpec(null)
       .toResultOr { "internal error: failed to read target model information" }
     val sourceTypeElement = Ok(sourceElement!!)
     val targetTypeElement = Ok(targetElement!!)

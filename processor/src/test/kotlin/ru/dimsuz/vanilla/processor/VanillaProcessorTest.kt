@@ -1,16 +1,16 @@
 package ru.dimsuz.vanilla.processor
 
 import com.google.common.truth.Truth.assertThat
-import com.squareup.kotlinpoet.metadata.ImmutableKmType
 import com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview
 import com.squareup.kotlinpoet.metadata.isInternal
 import com.squareup.kotlinpoet.metadata.isNullable
 import com.squareup.kotlinpoet.metadata.isPrivate
-import com.squareup.kotlinpoet.metadata.toImmutableKmClass
+import com.squareup.kotlinpoet.metadata.toKmClass
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import com.tschuchort.compiletesting.SourceFile.Companion.kotlin
 import kotlinx.metadata.KmClassifier
+import kotlinx.metadata.KmType
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -121,7 +121,7 @@ class VanillaProcessorTest {
 
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
 
-    val validatorClass = result.classLoader.loadClass("DraftValidatorBuilder").toImmutableKmClass()
+    val validatorClass = result.classLoader.loadClass("DraftValidatorBuilder").toKmClass()
     assertThat(validatorClass.functions.map { it.name })
       .containsAtLeast("firstName", "lastName")
   }
@@ -147,7 +147,7 @@ class VanillaProcessorTest {
 
     val builderClass = result.classLoader
       .loadClass("ru.dimsuz.vanilla.test.DraftValidatorBuilder")
-      .toImmutableKmClass()
+      .toKmClass()
     assertThat(builderClass.functions.map { it.name })
       .containsAtLeast("firstName", "isAdult")
   }
@@ -169,7 +169,7 @@ class VanillaProcessorTest {
 
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
 
-    val builderClass = result.classLoader.loadClass("DraftValidatorBuilder").toImmutableKmClass()
+    val builderClass = result.classLoader.loadClass("DraftValidatorBuilder").toKmClass()
     assertThat(builderClass.typeParameters.map { it.name })
       .containsExactly("E")
   }
@@ -191,7 +191,7 @@ class VanillaProcessorTest {
 
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
 
-    val validatorClass = result.classLoader.loadClass("DraftValidatorBuilder").toImmutableKmClass()
+    val validatorClass = result.classLoader.loadClass("DraftValidatorBuilder").toKmClass()
 
     val ruleFunction = validatorClass.functions.first { it.name == "firstName" }
     assertThat(ruleFunction.valueParameters).hasSize(1)
@@ -230,7 +230,7 @@ class VanillaProcessorTest {
 
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
 
-    val builderClass = result.classLoader.loadClass("DraftValidatorBuilder").toImmutableKmClass()
+    val builderClass = result.classLoader.loadClass("DraftValidatorBuilder").toKmClass()
 
     val ruleFunction = builderClass.functions.first { it.name == "firstName" }
     assertThat(ruleFunction.valueParameters).hasSize(1)
@@ -278,7 +278,7 @@ class VanillaProcessorTest {
 
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
 
-    val validatorClass = result.classLoader.loadClass("DraftValidatorBuilder").toImmutableKmClass()
+    val validatorClass = result.classLoader.loadClass("DraftValidatorBuilder").toKmClass()
 
     val ruleFunction = validatorClass.functions.first { it.name == "secondName" }
     assertThat(ruleFunction.valueParameters).hasSize(1)
@@ -314,7 +314,7 @@ class VanillaProcessorTest {
 
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
 
-    val builderClass = result.classLoader.loadClass("DraftValidatorBuilder").toImmutableKmClass()
+    val builderClass = result.classLoader.loadClass("DraftValidatorBuilder").toKmClass()
     val buildFunction = builderClass.functions.find { it.name == "build" }
     assertThat(buildFunction).isNotNull()
     assertThat(buildFunction!!.valueParameters).isEmpty()
@@ -339,7 +339,7 @@ class VanillaProcessorTest {
 
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
 
-    val builderClass = result.classLoader.loadClass("DraftValidatorBuilder").toImmutableKmClass()
+    val builderClass = result.classLoader.loadClass("DraftValidatorBuilder").toKmClass()
     val ruleFunction = builderClass.functions.find { it.name == "addr" }
     val parameter = ruleFunction?.valueParameters?.firstOrNull()
     assertThat(ruleFunction).isNotNull()
@@ -371,13 +371,13 @@ class VanillaProcessorTest {
 
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
 
-    val builderClass = result.classLoader.loadClass("DraftValidatorBuilder").toImmutableKmClass()
+    val builderClass = result.classLoader.loadClass("DraftValidatorBuilder").toKmClass()
     val companionClass = builderClass.companionObject?.let {
-      result.classLoader.loadClass("DraftValidatorBuilder$$it").toImmutableKmClass()
+      result.classLoader.loadClass("DraftValidatorBuilder$$it").toKmClass()
     }
     val createValidateFunction = companionClass?.functions?.find { it.name == "createValidateFunction" }
     assertThat(createValidateFunction).isNotNull()
-    assertThat(createValidateFunction?.isPrivate).isTrue()
+    assertThat(createValidateFunction?.flags?.isPrivate).isTrue()
     assertThat(createValidateFunction?.returnType?.classifier)
       .isEqualTo(KmClassifier.Class("kotlin/Function1"))
     assertThat(createValidateFunction?.returnType?.arguments?.get(0)?.type?.classifier)
@@ -404,8 +404,8 @@ class VanillaProcessorTest {
 
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
 
-    val builderClass = result.classLoader.loadClass("DraftValidatorBuilder").toImmutableKmClass()
-    assertThat(builderClass.isInternal)
+    val builderClass = result.classLoader.loadClass("DraftValidatorBuilder").toKmClass()
+    assertThat(builderClass.flags.isInternal)
       .isTrue()
   }
 
@@ -427,8 +427,8 @@ class VanillaProcessorTest {
 
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
 
-    val builderClass = result.classLoader.loadClass("DraftValidatorBuilder").toImmutableKmClass()
-    assertThat(builderClass.isInternal)
+    val builderClass = result.classLoader.loadClass("DraftValidatorBuilder").toKmClass()
+    assertThat(builderClass.flags.isInternal)
       .isTrue()
   }
 
@@ -452,8 +452,8 @@ class VanillaProcessorTest {
 
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
 
-    val builderClass = result.classLoader.loadClass("HelloDraftValidatorBuilder").toImmutableKmClass()
-    assertThat(builderClass.isInternal)
+    val builderClass = result.classLoader.loadClass("HelloDraftValidatorBuilder").toKmClass()
+    assertThat(builderClass.flags.isInternal)
       .isTrue()
   }
 
@@ -477,8 +477,8 @@ class VanillaProcessorTest {
 
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
 
-    val builderClass = result.classLoader.loadClass("HelloDraftValidatorBuilder").toImmutableKmClass()
-    assertThat(builderClass.isInternal)
+    val builderClass = result.classLoader.loadClass("HelloDraftValidatorBuilder").toKmClass()
+    assertThat(builderClass.flags.isInternal)
       .isTrue()
   }
 
@@ -506,8 +506,8 @@ class VanillaProcessorTest {
 
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
 
-    val builderClass = result.classLoader.loadClass("HelloWorldFooDraftValidatorBuilder").toImmutableKmClass()
-    assertThat(builderClass.isInternal)
+    val builderClass = result.classLoader.loadClass("HelloWorldFooDraftValidatorBuilder").toKmClass()
+    assertThat(builderClass.flags.isInternal)
       .isTrue()
   }
 
@@ -610,15 +610,15 @@ class VanillaProcessorTest {
   // TODO generates property validator signature which has target field type if it differs from source
   // TODO gives an error if source or target is private,must be public/internal
 
-  private fun assertIsValidatorType(type: ImmutableKmType?) {
+  private fun assertIsValidatorType(type: KmType?) {
     assertThat(type?.classifier).isEqualTo(KmClassifier.Class("ru/dimsuz/vanilla/Validator"))
   }
 
-  private fun ImmutableKmType?.withResultOkArg(body: (ImmutableKmType?) -> Unit) {
+  private fun KmType?.withResultOkArg(body: (KmType?) -> Unit) {
     body(this?.arguments?.getOrNull(1)?.type)
   }
 
-  private fun ImmutableKmType?.withFirstTypeArg(body: (ImmutableKmType?) -> Unit) {
+  private fun KmType?.withFirstTypeArg(body: (KmType?) -> Unit) {
     body(this?.arguments?.getOrNull(0)?.type)
   }
   private fun prepareCompilation(vararg sourceFiles: SourceFile): KotlinCompilation {

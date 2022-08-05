@@ -1,12 +1,11 @@
 dependencies {
   implementation(kotlin("stdlib-jdk8"))
   implementation(project(":library"))
-  implementation("com.squareup:kotlinpoet:1.9.0")
-  implementation("com.squareup:kotlinpoet-metadata:1.9.0")
-  implementation("com.squareup:kotlinpoet-metadata-specs:1.9.0")
+  implementation("com.squareup:kotlinpoet:1.12.0")
+  implementation("com.squareup:kotlinpoet-metadata:1.12.0")
 
   testImplementation("com.google.truth:truth:1.0.1")
-  testImplementation("com.github.tschuchortdev:kotlin-compile-testing:1.4.2")
+  testImplementation("com.github.tschuchortdev:kotlin-compile-testing:1.4.9")
 }
 
 tasks {
