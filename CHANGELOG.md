@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.12.0 - 2022-08-05
+
+* Upgrade kotlin version to `1.7.10`, upgrade kotlin-poet to fix kapt compilation errors on projects using kotlin `1.7.x`
+
 ## 0.11.0 - 2021-08-21
 
 * Remove `Validators` object, move built-in validators to be extensions on `Validator` companion object
