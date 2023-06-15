@@ -1,5 +1,5 @@
 plugins {
-  kotlin("jvm") version "1.7.10"
+  kotlin("jvm") version "1.8.21"
   `maven-publish`
   signing
   id("org.jetbrains.dokka") version "1.5.31"
@@ -27,7 +27,7 @@ val ktlintCheck by tasks.creating(JavaExec::class) {
   description = "Check Kotlin code style."
   classpath = ktlint
   group = "verification"
-  main = "com.pinterest.ktlint.Main"
+  mainClass.set("com.pinterest.ktlint.Main")
   args = listOf("**/*.kt")
 }
 
@@ -38,7 +38,7 @@ val ktlintFormat by tasks.creating(JavaExec::class) {
   description = "Fix Kotlin code style deviations."
   classpath = ktlint
   group = "verification"
-  main = "com.pinterest.ktlint.Main"
+  mainClass.set("com.pinterest.ktlint.Main")
   args = listOf("-F", "**/*.kt")
 }
 
@@ -50,10 +50,16 @@ subprojects {
 
   tasks {
     compileKotlin {
-      kotlinOptions.jvmTarget = "1.8"
+      kotlinOptions.jvmTarget = "11"
     }
     compileTestKotlin {
-      kotlinOptions.jvmTarget = "1.8"
+      kotlinOptions.jvmTarget = "11"
+    }
+  }
+
+  kotlin {
+    jvmToolchain {
+      languageVersion.set(JavaLanguageVersion.of(11))
     }
   }
 

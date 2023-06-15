@@ -8,7 +8,7 @@ repositories {
 }
 
 application {
-  mainClassName = "ru.dimsuz.vanilla.sample.MainKt"
+  mainClass.set("ru.dimsuz.vanilla.sample.MainKt")
 }
 
 dependencies {

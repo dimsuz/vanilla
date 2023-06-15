@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.13.0 - 2023-06-15
+
+* Upgrade kotlin version to `1.8.21`, upgrade kotlinpoet and gradle versions
+
 ## 0.12.0 - 2022-08-05
 
 * Upgrade kotlin version to `1.7.10`, upgrade kotlin-poet to fix kapt compilation errors on projects using kotlin `1.7.x`
