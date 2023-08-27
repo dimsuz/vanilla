@@ -1,6 +1,6 @@
 plugins {
   application
-  kotlin("kapt")
+  id("com.google.devtools.ksp")
 }
 
 repositories {
@@ -14,7 +14,7 @@ application {
 dependencies {
   implementation(kotlin("stdlib-jdk8"))
   implementation(project(":library"))
-  kapt(project(":processor"))
+  ksp(project(":processor"))
 
   testImplementation("com.google.truth:truth:1.0.1")
 }

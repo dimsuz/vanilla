@@ -9,6 +9,8 @@ import com.squareup.kotlinpoet.metadata.toKmClass
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import com.tschuchort.compiletesting.SourceFile.Companion.kotlin
+import com.tschuchort.compiletesting.kspWithCompilation
+import com.tschuchort.compiletesting.symbolProcessorProviders
 import kotlinx.metadata.KmClassifier
 import kotlinx.metadata.KmType
 import org.junit.Rule
@@ -18,7 +20,8 @@ import org.junit.rules.TemporaryFolder
 @KotlinPoetMetadataPreview
 class VanillaProcessorTest {
   @Rule
-  @JvmField var temporaryFolder: TemporaryFolder = TemporaryFolder()
+  @JvmField
+  var temporaryFolder: TemporaryFolder = TemporaryFolder()
 
   @Test
   fun classMustHaveProperties() {
@@ -37,7 +40,7 @@ class VanillaProcessorTest {
 
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains(
-      "error: failed to find matching properties. " +
+      "[ksp] failed to find matching properties. " +
         "Consider adding @ValidatedName annotation to properties of \"Draft\" class"
     )
   }
@@ -59,7 +62,7 @@ class VanillaProcessorTest {
 
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains(
-      "error: failed to find matching properties. " +
+      "[ksp] failed to find matching properties. " +
         "Consider adding @ValidatedName annotation to properties of \"Draft\" class"
     )
   }
@@ -609,7 +612,6 @@ class VanillaProcessorTest {
 
   // TODO generates property validator signature which has target field type if it differs from source
   // TODO gives an error if source or target is private,must be public/internal
-
   private fun assertIsValidatorType(type: KmType?) {
     assertThat(type?.classifier).isEqualTo(KmClassifier.Class("ru/dimsuz/vanilla/Validator"))
   }
@@ -621,14 +623,16 @@ class VanillaProcessorTest {
   private fun KmType?.withFirstTypeArg(body: (KmType?) -> Unit) {
     body(this?.arguments?.getOrNull(0)?.type)
   }
+
   private fun prepareCompilation(vararg sourceFiles: SourceFile): KotlinCompilation {
     return KotlinCompilation()
       .apply {
         workingDir = temporaryFolder.root
-        annotationProcessors = listOf(VanillaProcessor())
+        symbolProcessorProviders = listOf(VanillaProcessorProvider())
         inheritClassPath = true
         sources = sourceFiles.asList()
         verbose = false
+        kspWithCompilation = true
       }
   }
 

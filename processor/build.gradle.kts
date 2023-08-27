@@ -3,9 +3,11 @@ dependencies {
   implementation(project(":library"))
   implementation("com.squareup:kotlinpoet:1.14.2")
   implementation("com.squareup:kotlinpoet-metadata:1.14.2")
+  implementation("com.squareup:kotlinpoet-ksp:1.14.2")
+  implementation("com.google.devtools.ksp:symbol-processing-api:1.8.21-1.0.11")
 
   testImplementation("com.google.truth:truth:1.0.1")
-  testImplementation("com.github.tschuchortdev:kotlin-compile-testing:1.5.0")
+  testImplementation("com.github.tschuchortdev:kotlin-compile-testing-ksp:1.5.0")
 }
 
 tasks {

@@ -3,6 +3,12 @@ package ru.dimsuz.vanilla.processor
 import com.github.michaelbull.result.Err
 import com.github.michaelbull.result.Ok
 import com.github.michaelbull.result.Result
+import com.github.michaelbull.result.mapError
+import com.github.michaelbull.result.runCatching
+import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
+import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.Modifier
+import com.google.devtools.ksp.symbol.Nullability
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
@@ -15,25 +21,27 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.TypeVariableName
-import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
-import com.squareup.kotlinpoet.metadata.isInternal
-import com.squareup.kotlinpoet.metadata.toKmClass
+import com.squareup.kotlinpoet.ksp.toClassName
+import com.squareup.kotlinpoet.ksp.writeTo
 import ru.dimsuz.vanilla.Validator
-import ru.dimsuz.vanilla.processor.extension.enclosingPackageName
-import ru.dimsuz.vanilla.processor.file.writeFile
-import javax.annotation.processing.ProcessingEnvironment
-import javax.lang.model.element.TypeElement
 
-fun generateValidator(processingEnv: ProcessingEnvironment, analysisResult: SourceAnalysisResult): Result<Unit, Error> {
+fun generateValidator(
+  processingEnv: SymbolProcessorEnvironment,
+  analysisResult: SourceAnalysisResult,
+): Result<Unit, Error> {
   val builderTypeSpec = createBuilderTypeSpec(analysisResult)
   val fileSpec = FileSpec
     .builder(
-      analysisResult.models.sourceElement.enclosingPackageName, builderTypeSpec.name!!
+      analysisResult.models.sourceElement.packageName.asString(), builderTypeSpec.name!!
     )
     .addType(builderTypeSpec)
     .build()
-  return writeFile(processingEnv, fileSpec)
+  return runCatching {
+    fileSpec.writeTo(processingEnv.codeGenerator, true)
+  }.mapError {
+    it.message.orEmpty()
+  }
 }
 
 @Suppress("SameParameterValue") // intentionally passing here to sync caller/callee
@@ -72,12 +80,12 @@ private fun createValidationExecStatements(
 
 @Suppress("EXPERIMENTAL_API_USAGE")
 private fun extractTargetClassName(analysisResult: SourceAnalysisResult): ClassName {
-  return analysisResult.models.targetElement.asClassName()
+  return analysisResult.models.targetElement.toClassName()
 }
 
 @Suppress("EXPERIMENTAL_API_USAGE")
 private fun extractSourceClassName(analysisResult: SourceAnalysisResult): ClassName {
-  return analysisResult.models.sourceElement.asClassName()
+  return analysisResult.models.sourceElement.toClassName()
 }
 
 private fun createBuilderTypeSpec(analysisResult: SourceAnalysisResult): TypeSpec {
@@ -101,13 +109,13 @@ private fun createBuilderClassModifiers(analysisResult: SourceAnalysisResult): L
   } else emptyList()
 }
 
-private fun TypeElement.isInternalOrEnclosedByInternal(): Boolean {
-  var element: TypeElement? = this
+private fun KSClassDeclaration.isInternalOrEnclosedByInternal(): Boolean {
+  var element: KSClassDeclaration? = this
   while (element != null) {
-    if (element.toKmClass().flags.isInternal) {
+    if (element.modifiers.contains(Modifier.INTERNAL)) {
       return true
     }
-    element = element.enclosingElement as? TypeElement
+    element = element.parentDeclaration as? KSClassDeclaration
   }
   return false
 }
@@ -185,7 +193,11 @@ private fun createValidateFunction(analysisResult: SourceAnalysisResult): FunSpe
 }
 
 private fun SourceAnalysisResult.targetPropertyIsNullable(targetPropertyName: String): Boolean {
-  return this.models.targetTypeSpec.propertySpecs.first { it.name == targetPropertyName }.type.isNullable
+  return this.models.targetElement.getAllProperties()
+    .first { it.simpleName.asString() == targetPropertyName }
+    .type
+    .resolve()
+    .nullability == Nullability.NULLABLE
 }
 
 private fun createValidateFunctionBody(analysisResult: SourceAnalysisResult): CodeBlock {
