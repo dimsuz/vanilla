@@ -1,8 +1,8 @@
 # Changelog
 
-## 0.14.0 - 2023-06-15
+## 0.14.0 - 2023-08-27
 
-* Replace kapt to ksp
+* Replace kapt with ksp
 
 ## 0.13.0 - 2023-06-15
 
