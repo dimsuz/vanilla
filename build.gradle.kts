@@ -3,6 +3,7 @@ plugins {
   `maven-publish`
   signing
   id("org.jetbrains.dokka") version "1.5.31"
+  id("com.google.devtools.ksp") version "1.8.21-1.0.11" apply false
 }
 
 allprojects {
