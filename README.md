@@ -196,7 +196,7 @@ will be any.
 
 ```
 implementation "ru.dimsuz:vanilla:0.13.0"
-kapt "ru.dimsuz:vanilla-processor:0.13.0"
+ksp "ru.dimsuz:vanilla-processor:0.13.0"
 ```
 
 ## License

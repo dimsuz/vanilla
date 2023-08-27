@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.14.0 - 2023-06-15
+
+* Replace kapt to ksp
+
 ## 0.13.0 - 2023-06-15
 
 * Upgrade kotlin version to `1.8.21`, upgrade kotlinpoet and gradle versions
