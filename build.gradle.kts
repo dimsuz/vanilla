@@ -2,7 +2,7 @@ plugins {
   kotlin("jvm") version "1.9.10"
   `maven-publish`
   signing
-  id("org.jetbrains.dokka") version "1.5.31"
+  id("org.jetbrains.dokka") version "1.9.0"
   id("com.google.devtools.ksp") version "1.9.10-1.0.13" apply false
 }
 
