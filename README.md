@@ -195,8 +195,8 @@ will be any.
 ## Download
 
 ```
-implementation "ru.dimsuz:vanilla:0.14.0"
-ksp "ru.dimsuz:vanilla-processor:0.14.0"
+implementation "ru.dimsuz:vanilla:0.14.1"
+ksp "ru.dimsuz:vanilla-processor:0.14.1"
 ```
 
 ## License
