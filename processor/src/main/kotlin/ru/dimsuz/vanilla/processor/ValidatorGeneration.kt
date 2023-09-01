@@ -22,6 +22,7 @@ import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.asTypeName
+import com.squareup.kotlinpoet.ksp.kspDependencies
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.writeTo
 import ru.dimsuz.vanilla.Validator
@@ -38,7 +39,8 @@ fun generateValidator(
     .addType(builderTypeSpec)
     .build()
   return runCatching {
-    fileSpec.writeTo(processingEnv.codeGenerator, true)
+    val dependencies = fileSpec.kspDependencies(false, listOf(analysisResult.file))
+    fileSpec.writeTo(processingEnv.codeGenerator, dependencies)
   }.mapError {
     it.message.orEmpty()
   }

@@ -3,7 +3,6 @@ package ru.dimsuz.vanilla.processor
 import com.github.michaelbull.result.Err
 import com.github.michaelbull.result.Ok
 import com.github.michaelbull.result.Result
-import com.github.michaelbull.result.zip
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
@@ -55,8 +54,14 @@ fun findMatchingProperties(models: ModelPair): Result<SourceAnalysisResult, Erro
     val additionalProperties = unmappedTargetProperties.associateBy {
       PropertySpec.builder(it.name, Unit::class).build()
     }
+    val file =
+      models.sourceElement.containingFile
+        ?: models.sourceElement.parentDeclaration?.containingFile
+        ?: return Err("failed to find file of \"${models.sourceElement.simpleName.asString()}\" class")
+
     Ok(
       SourceAnalysisResult(
+        file,
         models,
         mapping + additionalProperties,
         unmappedTargetProperties
