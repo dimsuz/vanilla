@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.14.1 - 2023-09-01
+
+* Update kotlin to 1.9.10 and ksp to 1.9.10-1.0.13
+* Fix incremental compilation
+* Convert processor to isolated
+
 ## 0.14.0 - 2023-08-27
 
 * Replace kapt with ksp
